@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Essence Studio | Pasaporte</title>
+  <style>
+    /* Quitamos los márgenes y bloqueamos el scroll nativo */
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #F9EFEE; }
+    .iframe-container { width: 100%; height: 100%; overflow: hidden; position: relative; }
+    
+    /* LA MAGIA: Subimos el iframe exactamente 36px (el tamaño del banner de Google) para ocultarlo */
+    iframe { position: absolute; top: -36px; left: 0; width: 100%; height: calc(100% + 36px); border: none; }
+  </style>
+</head>
+<body>
+
+  <div class="iframe-container">
+    <iframe id="app-frame" src=""></iframe>
+  </div>
+
+  <script>
+    // 1. PEGA AQUÍ LA NUEVA URL QUE OBTUVISTE EN LA CUENTA DE ESSENCE
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzWWyilV2vP41okjKIDpOWPbYbH6ZYOW3D_TIT1VFTi9I3zRyai-_SWiDT0Fi_VMbf_/exec";
+    
+    // 2. Este código captura el token si la clienta escaneó un QR (?token=XYZ)
+    const parametros = window.location.search;
+    
+    // 3. Inyectamos la URL de Google + el token dentro del iframe
+    document.getElementById('app-frame').src = scriptUrl + parametros;
+  </script>
+
+</body>
+</html>
