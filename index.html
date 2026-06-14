@@ -80,19 +80,126 @@
   </div>
 
   <script>
-    // 1. URL DE TU GOOGLE APPS SCRIPT
+    // 1. URL DE TU GOOGLE APPS SCRIPT (Asegúrate de que termina en /exec)
     const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzWWyilV2vP41okjKIDpOWPbYbH6ZYOW3D_TIT1VFTi9I3zRyai-_SWiDT0Fi_VMbf_/exec";
 
-    // 2. LÓGICA QUE ANTES ESTABA EN JS.HTML (PEGAR AQUÍ TODO TU CONTENIDO DE JAVASCRIPT.HTML)
-    // ATENCIÓN: Debes reemplazar las llamadas 'google.script.run' por 'llamarBackend'
+    // 2. FUNCIÓN PARA COMUNICARSE CON GOOGLE
     async function llamarBackend(action, payload = {}) {
-      const response = await fetch(GOOGLE_API_URL, { method: "POST", body: JSON.stringify({ action, ...payload }) });
-      return await response.json();
+      try {
+        const response = await fetch(GOOGLE_API_URL, {
+          method: "POST",
+          mode: "cors", // Importante: permite la comunicación con tu dominio
+          body: JSON.stringify({ action: action, ...payload })
+        });
+        return await response.json();
+      } catch (error) {
+        console.error("Error:", error);
+        return { error: "No se pudo conectar al servidor" };
+      }
     }
 
-    // A partir de aquí, copia y pega todas tus funciones originales (showView, showDashboard, etc.)
-    // Y asegúrate de usar 'await llamarBackend(...)' en lugar de 'google.script.run...'
-  </script>
+    function showView(viewId) {
+    document.getElementById('loader').classList.add('hidden');
+    document.getElementById('register-view').classList.add('hidden');
+    document.getElementById('dashboard-view').classList.add('hidden');
+    document.getElementById(viewId).classList.remove('hidden');
+  }
+
+  function showDashboard(data) {
+    if(!data) { localStorage.removeItem('essence_client_id'); showView('register-view'); return; }
+    showView('dashboard-view');
+    document.getElementById('client-name').innerText = data.nombre.split(' ')[0];
+    document.getElementById('client-points').innerText = data.puntos;
+
+    const grid = document.getElementById('stickers-grid');
+    grid.innerHTML = '';
+    for (let i = 1; i <= 10; i++) {
+      const isFilled = i <= data.puntos;
+      const isMilestone = i === 5 || i === 10;
+      let content = isFilled ? '✓' : i;
+      if (i === 5) content = isFilled ? '✓' : '50%';
+      if (i === 10) content = isFilled ? '✓' : 'FREE';
+      
+      let cssClasses = 'h-12 rounded-xl flex items-center justify-center transition-all relative ';
+      if (isFilled) cssClasses += 'bg-[#D9889A] text-white font-bold text-lg shadow-[0_4px_12px_rgba(217,136,154,0.4)] border border-[#D9889A]';
+      else if (isMilestone) {
+        cssClasses += 'bg-[#FFF5F7] border-2 border-[#D9889A] text-[#D9889A] font-bold text-xs ';
+        if ((i === 5 && data.puntos < 5) || (i === 10 && data.puntos >= 5 && data.puntos < 10)) cssClasses += 'animate-latido bg-white'; 
+      } else cssClasses += 'bg-white border border-[#d9bbb1] text-[#BDBDBD] text-xs';
+      grid.innerHTML += `<div class="${cssClasses}">${content}</div>`;
+    }
+
+    // --- RESTAURACIÓN DE LA LÓGICA DE RESEÑAS ---
+    const reviewsSection = document.getElementById('reviews-section');
+    if (data.puntos === 1) {
+      reviewsSection.innerHTML = `
+        <div class="glass rounded-3xl p-6 text-center border border-[#d9bbb1]/50 relative overflow-hidden shadow-sm mt-8">
+          <div class="absolute -right-5 -top-5 w-24 h-24 bg-[#D9889A] opacity-10 blur-2xl rounded-full"></div>
+          <h3 class="text-sm font-bold text-[#1A1A1A] mb-1 relative z-10">¿Te encantó tu experiencia?</h3>
+          <p class="text-xs text-[#8A7175] mb-4 relative z-10">Ayúdanos a brillar en Google dejándonos 5 estrellas.</p>
+          <div class="flex justify-center space-x-2 mb-5 text-[#D9889A] text-xl relative z-10">
+            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <a href="https://g.page/r/CUg5kawSJRdYEBM/review" target="_top" class="relative z-10 inline-block bg-white border border-[#d9bbb1] text-[#D9889A] px-8 py-3 rounded-full text-xs font-bold tracking-wide shadow-[0_4px_10px_rgba(217,136,154,0.1)] active:scale-95 transition">
+            Calificar a Essence
+          </a>
+        </div>
+      `;
+    } else {
+      window.listaResenas = [
+        { texto: "El mejor servicio de pedicure, súper detallistas y un ambiente relajante.", autor: "Camila R." },
+        { texto: "Excelente atención. Las chicas son muy profesionales y el local es hermoso.", autor: "Luciana M." },
+        { texto: "Amé el resultado de mi rubber. Duró muchísimo y se ve súper natural.", autor: "Valeria T." },
+        { texto: "Siempre me atienden con mucho cariño. El nivel de detalle es insuperable.", autor: "Sofía C." }
+      ];
+      
+      reviewsSection.innerHTML = `
+        <div class="px-2 mt-8">
+          <h3 class="text-[10px] uppercase tracking-widest text-[#B59C9E] font-bold mb-3 pl-2">Lo que dicen nuestras socias</h3>
+          <div class="glass rounded-2xl p-5 border border-[#d9bbb1]/50 shadow-sm relative min-h-[140px] flex flex-col justify-center">
+            <div class="absolute top-4 right-4 text-[#D9889A]/20 text-4xl font-serif leading-none">"</div>
+            <p id="review-text" class="text-xs text-[#8A7175] italic leading-relaxed mb-3 relative z-10">"${window.listaResenas[0].texto}"</p>
+            <p id="review-author" class="text-[10px] text-[#B59C9E] font-bold uppercase tracking-wider">- ${window.listaResenas[0].autor}</p>
+          </div>
+        </div>
+      `;
+      // Iniciamos el ciclo de cambio de reseñas
+      let indiceResena = 0;
+      if(window.reviewInterval) clearInterval(window.reviewInterval); 
+      window.reviewInterval = setInterval(() => {
+        indiceResena = (indiceResena + 1) % window.listaResenas.length;
+        document.getElementById('review-text').innerText = '"' + window.listaResenas[indiceResena].texto + '"';
+        document.getElementById('review-author').innerText = "- " + window.listaResenas[indiceResena].autor;
+      }, 5000); 
+    }
+  }
+
+  function mostrarCelebracion(milestone) {
+    const modal = document.getElementById('celebration-modal');
+    if(milestone === 5) { document.getElementById('celebration-title').innerText = "¡Llegaste a la mitad!"; document.getElementById('celebration-desc').innerHTML = "Acabas de ganar un <b class='text-[#D9889A] text-base'>50% de Descuento</b>."; document.getElementById('celebration-icon').innerText = "🎉"; }
+    else if (milestone === 10) { document.getElementById('celebration-title').innerText = "¡Pasaporte Lleno!"; document.getElementById('celebration-desc').innerHTML = "Acabas de ganar un <b class='text-[#D9889A] text-base'>Servicio Totalmente Gratis</b>."; document.getElementById('celebration-icon').innerText = "👑"; }
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.remove('opacity-0', 'pointer-events-none'), 50);
+  }
+
+  function filtrarInstagram() {
+    const inputField = document.getElementById('reg-ig');
+    const texto = inputField.value.toLowerCase().replace('@', ''); 
+    const sugerenciasBox = document.getElementById('ig-suggestions');
+    sugerenciasBox.innerHTML = ''; 
+    if (texto.length < 2 || !window.listaInstagram) { sugerenciasBox.classList.add('hidden'); return; }
+    const filtrados = window.listaInstagram.filter(ig => String(ig).toLowerCase().includes(texto)).slice(0, 4);
+    if (filtrados.length === 0) { sugerenciasBox.classList.add('hidden'); return; }
+    filtrados.forEach(ig => {
+      const li = document.createElement('li');
+      li.className = 'p-4 text-sm text-[#8A7175] cursor-pointer';
+      li.innerText = '@' + ig.replace('@', '');
+      li.onclick = () => { inputField.value = li.innerText; sugerenciasBox.classList.add('hidden'); };
+      sugerenciasBox.appendChild(li);
+    });
+    sugerenciasBox.classList.remove('hidden'); 
+  }
+</script>
 
 </body>
 </html>
