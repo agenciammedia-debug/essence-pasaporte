@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Essence Studio | Pasaporte</title>
   <style>
-    /* Quitamos los márgenes y bloqueamos el scroll nativo de la máscara */
     body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #F9EFEE; }
     .iframe-container { width: 100%; height: 100%; overflow: hidden; position: relative; }
-    
-    /* LA MAGIA: Subimos el iframe exactamente 36px para ocultar el banner de Google */
     iframe { position: absolute; top: -36px; left: 0; width: 100%; height: calc(100% + 36px); border: none; }
   </style>
 </head>
@@ -23,11 +20,22 @@
     // 1. LA URL DE TU GOOGLE APPS SCRIPT
     const scriptUrl = "https://script.google.com/macros/s/AKfycbzWWyilV2vP41okjKIDpOWPbYbH6ZYOW3D_TIT1VFTi9I3zRyai-_SWiDT0Fi_VMbf_/exec";
     
-    // 2. Capturamos el token del QR si la clienta escaneó uno (ej. ?token=12345678)
-    const parametros = window.location.search;
-    
-    // 3. Inyectamos la URL de Google + el token dentro del iframe
-    document.getElementById('app-frame').src = scriptUrl + parametros;
+    // 2. Extraemos el token del código QR si existe
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token') || "";
+
+    // 3. LA MAGIA ANTI-SAFARI: Leemos la memoria desde GitHub (1ra persona)
+    const savedClientId = localStorage.getItem('essence_client_id') || "";
+
+    // 4. Armamos la URL inyectando el token y la memoria
+    document.getElementById('app-frame').src = scriptUrl + "?token=" + token + "&client_id=" + savedClientId;
+
+    // 5. Escuchamos a Google para guardar el ID cuando alguien nuevo se registre
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'SAVE_ID') {
+        localStorage.setItem('essence_client_id', event.data.id);
+      }
+    });
   </script>
 
 </body>
