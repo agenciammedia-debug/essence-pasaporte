@@ -17,25 +17,9 @@
   </div>
 
   <script>
-    // 1. LA URL DE TU GOOGLE APPS SCRIPT
     const scriptUrl = "https://script.google.com/macros/s/AKfycbzWWyilV2vP41okjKIDpOWPbYbH6ZYOW3D_TIT1VFTi9I3zRyai-_SWiDT0Fi_VMbf_/exec";
-    
-    // 2. Extraemos el token del código QR si existe
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token') || "";
-
-    // 3. LA MAGIA ANTI-SAFARI: Leemos la memoria desde GitHub (1ra persona)
-    const savedClientId = localStorage.getItem('essence_client_id') || "";
-
-    // 4. Armamos la URL inyectando el token y la memoria
-    document.getElementById('app-frame').src = scriptUrl + "?token=" + token + "&client_id=" + savedClientId;
-
-    // 5. Escuchamos a Google para guardar el ID cuando alguien nuevo se registre
-    window.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'SAVE_ID') {
-        localStorage.setItem('essence_client_id', event.data.id);
-      }
-    });
+    const parametros = window.location.search;
+    document.getElementById('app-frame').src = scriptUrl + parametros;
   </script>
 
 </body>
