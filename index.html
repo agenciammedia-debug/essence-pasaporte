@@ -18,8 +18,25 @@
 
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbzWWyilV2vP41okjKIDpOWPbYbH6ZYOW3D_TIT1VFTi9I3zRyai-_SWiDT0Fi_VMbf_/exec";
-    const parametros = window.location.search;
-    document.getElementById('app-frame').src = scriptUrl + parametros;
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token') || "";
+    
+    // 1. GitHub lee la memoria (Safari NUNCA borra esta)
+    const savedClientId = localStorage.getItem('essence_client_id') || "";
+    
+    // 2. Le inyectamos el token y la memoria a Google
+    let finalUrl = scriptUrl + "?token=" + token;
+    if (savedClientId) {
+      finalUrl += "&client_id=" + savedClientId;
+    }
+    document.getElementById('app-frame').src = finalUrl;
+
+    // 3. Escuchamos a Google para saber cuándo guardar a alguien nuevo
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'SAVE_ID') {
+        localStorage.setItem('essence_client_id', event.data.id);
+      }
+    });
   </script>
 
 </body>
