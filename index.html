@@ -2,247 +2,43 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="manifest" href="manifest.json">
-  <title>Essence Studio</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Essence Studio | Pasaporte</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #F9EFEE; color: #1A1A1A; overflow-x: hidden;}
-    .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05); }
-    input, select { background: #FFFFFF; border: 1px solid #d9bbb1; color: #1A1A1A; }
-    input:focus, select:focus { outline: none; border-color: #d9bbb1; box-shadow: 0 0 0 3px rgba(217, 187, 177, 0.25); }
-    ::placeholder { color: #8F8F8F; }
-    @keyframes latido-premium { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(217, 136, 154, 0.5); } 50% { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(217, 136, 154, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(217, 136, 154, 0); } }
-    .animate-latido { animation: latido-premium 2s infinite ease-in-out; z-index: 20; }
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #F9EFEE; }
+    .iframe-container { width: 100%; height: 100%; overflow: hidden; position: relative; }
+    iframe { position: absolute; top: -36px; left: 0; width: 100%; height: calc(100% + 36px); border: none; }
   </style>
 </head>
-<body class="min-h-screen relative p-6 max-w-md mx-auto">
+<body>
 
-  <div id="loader" class="flex h-screen items-center justify-center">
-    <div class="animate-spin rounded-full h-12 w-12 border-4 border-[#d9bbb1]/30 border-t-[#D9889A]"></div>
-  </div>
-
-  <div id="login-view" class="hidden space-y-6 pt-10 pb-12 text-center">
-    <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" class="h-24 w-auto mx-auto mb-4 object-contain">
-    <h1 class="text-2xl font-light text-[#8A7175]">Tu Pasaporte <span class="font-bold text-[#d9bbb1]">Essence</span></h1>
-    <p class="text-sm text-[#B59C9E] mt-2 font-medium">Ingresa tu número para ver tus sellos.</p>
-    
-    <div class="mt-8 space-y-4">
-      <input type="tel" id="login-telefono" placeholder="Número de WhatsApp" class="w-full rounded-xl p-4 text-sm appearance-none">
-      <button onclick="iniciarSesion()" id="btn-login" class="w-full bg-[#D9889A] text-white shadow-md py-4 rounded-full font-bold transition active:scale-95">Entrar</button>
-    </div>
-
-    <div class="mt-8 pt-6 border-t border-[#d9bbb1]/30">
-      <p class="text-xs text-[#8A7175]">¿Aún no tienes pasaporte?</p>
-      <button onclick="showView('register-view')" class="text-[#D9889A] font-bold text-sm underline mt-2">Registrarme gratis</button>
-    </div>
-  </div>
-
-  <div id="register-view" class="hidden space-y-6 pt-6 pb-12">
-    <div class="text-center mb-6">
-      <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" class="h-16 w-auto mx-auto mb-2 object-contain">
-      <h1 class="text-xl font-light text-[#8A7175]">Nueva Socia <span class="font-bold text-[#d9bbb1]">Essence</span></h1>
-    </div>
-
-    <form id="register-form" class="space-y-4" onsubmit="handleRegister(event)">
-      <input type="text" id="reg-nombre" placeholder="Nombre completo" required class="w-full rounded-xl p-4 text-sm appearance-none">
-      <input type="tel" id="reg-telefono" placeholder="WhatsApp" required class="w-full rounded-xl p-4 text-sm appearance-none">
-      <input type="text" id="reg-ig" placeholder="Usuario de Instagram (Opcional)" class="w-full rounded-xl p-4 text-sm appearance-none" autocomplete="off">
-      <select id="reg-mes" required class="w-full rounded-xl p-4 text-sm text-[#8F8F8F] appearance-none">
-        <option value="" disabled selected>Mes de cumpleaños</option>
-        <option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option>
-        <option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio">Junio</option>
-        <option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option>
-        <option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option>
-      </select>
-      <input type="email" id="reg-correo" placeholder="Correo electrónico" required class="w-full rounded-xl p-4 text-sm appearance-none">
-      
-      <button type="submit" id="btn-register" class="w-full bg-[#D9889A] text-white shadow-md py-4 rounded-full font-bold mt-2 transition active:scale-95">Crear Pasaporte</button>
-      <button type="button" onclick="showView('login-view')" class="w-full text-[#B59C9E] text-xs mt-4 uppercase tracking-widest font-bold">Cancelar</button>
-    </form>
-  </div>
-
-  <div id="dashboard-view" class="hidden space-y-8 pt-6 pb-12">
-    <div class="flex justify-between items-center">
-      <div>
-        <h1 class="text-3xl font-light tracking-tight text-[#8A7175]">Hola, <br><span id="client-name" class="font-bold text-[#D9889A]">...</span></h1>
-        <p class="text-xs text-[#B59C9E] mt-1 uppercase tracking-widest font-medium">Socia Essence</p>
-      </div>
-      <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" class="h-20 w-auto object-contain">
-    </div>
-
-    <div class="glass rounded-3xl p-6 relative overflow-hidden">
-      <div class="absolute -right-10 -top-10 w-40 h-40 bg-[#D9889A] opacity-10 blur-3xl rounded-full"></div>
-      <div class="flex justify-between items-end mb-6 relative z-10">
-        <h2 class="text-lg font-bold text-[#1A1A1A]">Tu Pasaporte</h2>
-        <p class="text-xs text-[#8A7175]"><span id="client-points" class="text-xl text-[#D9889A] font-bold">0</span> / 10 sellos</p>
-      </div>
-
-      <div class="grid grid-cols-5 gap-3 relative z-10" id="stickers-grid"></div>
-
-      <div class="mt-6 bg-[#FFF5F7] rounded-xl p-4 flex justify-between items-center border border-[#d9bbb1] relative z-10 shadow-sm">
-        <div class="text-center w-1/2 border-r border-[#d9bbb1]/50">
-          <p class="text-[10px] uppercase tracking-widest text-[#B59C9E] mb-1 font-bold">Sello 5</p>
-          <p class="text-sm font-bold text-[#D9889A]">50% OFF</p>
-        </div>
-        <div class="text-center w-1/2">
-          <p class="text-[10px] uppercase tracking-widest text-[#B59C9E] mb-1 font-bold">Sello 10</p>
-          <p class="text-sm font-bold text-[#D9889A]">Servicio Gratis</p>
-        </div>
-      </div>
-      <div class="mt-4 text-center relative z-10">
-        <p class="text-[9px] text-[#B59C9E] tracking-wide uppercase">* Aplica solo para servicio Rubber o Pedicure.</p>
-      </div>
-    </div>
+  <div class="iframe-container">
+    <iframe id="app-frame" src=""></iframe>
   </div>
 
   <script>
-    // ⚠️ REEMPLAZA ESTO CON LA URL QUE COPIASTE EN EL PASO 1
-    const API_URL = "https://script.google.com/macros/s/AKfycbwoAqZlGdd65rW6V9djElztweJZQ7s7BblSKedTINk5HHlj542aJsCNXPiRMCXhv4g0/exec";
-
-    // 1. CONEXIÓN SEGURA Y ANTI-BLOQUEO (text/plain)
-    async function llamarAPI(action, params = {}) {
-      params.action = action;
-      try {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(params)
-        });
-        const json = await res.json();
-        if (json.success) return json.data;
-        throw new Error(json.error);
-      } catch (err) {
-        console.error("Error de API:", err);
-        return null;
-      }
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzWWyilV2vP41okjKIDpOWPbYbH6ZYOW3D_TIT1VFTi9I3zRyai-_SWiDT0Fi_VMbf_/exec";
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token') || "";
+    
+    // 1. GitHub lee la memoria (Safari NUNCA borra esta)
+    const savedClientId = localStorage.getItem('essence_client_id') || "";
+    
+    // 2. Le inyectamos el token y la memoria a Google
+    let finalUrl = scriptUrl + "?token=" + token;
+    if (savedClientId) {
+      finalUrl += "&client_id=" + savedClientId;
     }
+    document.getElementById('app-frame').src = finalUrl;
 
-    // 2. INICIO AUTOMÁTICO
-    document.addEventListener('DOMContentLoaded', async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const tokenEscaneado = urlParams.get('token');
-      
-      // La memoria permanente en PWA
-      const savedClientId = localStorage.getItem('essence_client_id');
-
-      if (savedClientId) {
-        if (tokenEscaneado) {
-          const data = await llamarAPI('addPoint', { id: savedClientId, token: tokenEscaneado });
-          if (data && !data.error) {
-             alert("¡Sello sumado con éxito!");
-             window.history.replaceState({}, document.title, window.location.pathname);
-          } else {
-             alert(data ? data.error : "Código Inválido o ya usado.");
-             window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        }
-        cargarDashboard(savedClientId);
-      } else {
-        showView('login-view');
-        if(tokenEscaneado) sessionStorage.setItem('pending_token', tokenEscaneado);
+    // 3. Escuchamos a Google para saber cuándo guardar a alguien nuevo
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'SAVE_ID') {
+        localStorage.setItem('essence_client_id', event.data.id);
       }
     });
-
-    function showView(id) {
-      ['loader', 'login-view', 'register-view', 'dashboard-view'].forEach(v => document.getElementById(v).classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-    }
-
-    // 3. FLUJOS DE USUARIO
-    async function iniciarSesion() {
-      const tel = document.getElementById('login-telefono').value;
-      if(!tel) return alert("Por favor, ingresa tu número de WhatsApp");
-      
-      const btn = document.getElementById('btn-login');
-      const textOriginal = btn.innerText;
-      btn.innerText = "Buscando...";
-      
-      const userData = await llamarAPI('login', { telefono: tel });
-      
-      if (userData && userData.id) {
-        localStorage.setItem('essence_client_id', userData.id);
-        const pendingToken = sessionStorage.getItem('pending_token');
-        if(pendingToken) {
-           await llamarAPI('addPoint', { id: userData.id, token: pendingToken });
-           sessionStorage.removeItem('pending_token');
-           alert("¡Se ha sumado tu sello pendiente!");
-           window.history.replaceState({}, document.title, window.location.pathname);
-        }
-        cargarDashboard(userData.id);
-      } else {
-        alert("Número no encontrado. Verifica si lo escribiste bien o crea un pasaporte nuevo.");
-        btn.innerText = textOriginal;
-      }
-    }
-
-    async function handleRegister(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btn-register');
-      const textOriginal = btn.innerText;
-      btn.innerText = "Validando...";
-      
-      const formData = {
-        nombre: document.getElementById('reg-nombre').value,
-        telefono: document.getElementById('reg-telefono').value,
-        instagram: document.getElementById('reg-ig').value,
-        cumple: document.getElementById('reg-mes').value,
-        correo: document.getElementById('reg-correo').value
-      };
-      
-      const token = sessionStorage.getItem('pending_token') || null;
-      const result = await llamarAPI('register', { data: formData, token: token });
-      
-      if (result && result.id) {
-        localStorage.setItem('essence_client_id', result.id);
-        sessionStorage.removeItem('pending_token');
-        cargarDashboard(result.id);
-      } else {
-        alert("Ocurrió un error al registrar. Inténtalo de nuevo.");
-        btn.innerText = textOriginal;
-      }
-    }
-
-    async function cargarDashboard(id) {
-      showView('loader');
-      const data = await llamarAPI('getDashboard', { id: id });
-      
-      if (data) {
-        document.getElementById('client-name').innerText = data.nombre.split(' ')[0];
-        document.getElementById('client-points').innerText = data.puntos;
-        
-        const grid = document.getElementById('stickers-grid');
-        grid.innerHTML = '';
-        for (let i = 1; i <= 10; i++) {
-          const isFilled = i <= data.puntos;
-          const isMilestone = i === 5 || i === 10;
-          let content = isFilled ? '✓' : i;
-          if (i === 5) content = isFilled ? '✓' : '50%';
-          if (i === 10) content = isFilled ? '✓' : 'FREE';
-          
-          let cssClasses = 'h-12 rounded-xl flex items-center justify-center transition-all relative ';
-          if (isFilled) cssClasses += 'bg-[#D9889A] text-white font-bold text-lg shadow-[0_4px_12px_rgba(217,136,154,0.4)] border border-[#D9889A]';
-          else if (isMilestone) {
-            cssClasses += 'bg-[#FFF5F7] border-2 border-[#D9889A] text-[#D9889A] font-bold text-xs shadow-sm ';
-            if ((i === 5 && data.puntos < 5) || (i === 10 && data.puntos >= 5 && data.puntos < 10)) cssClasses += 'animate-latido bg-white';
-          } else cssClasses += 'bg-white border border-[#d9bbb1] text-[#BDBDBD] text-xs shadow-sm';
-          
-          grid.innerHTML += `<div class="${cssClasses}">${content}</div>`;
-        }
-        showView('dashboard-view');
-      } else {
-        localStorage.removeItem('essence_client_id');
-        showView('login-view');
-      }
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=' + new Date().getTime());
-    }
   </script>
+
 </body>
 </html>
+
