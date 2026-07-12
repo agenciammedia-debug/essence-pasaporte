@@ -2,42 +2,178 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Essence Studio | Pasaporte</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <title>Essence Pasaporte</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #F9EFEE; }
-    .iframe-container { width: 100%; height: 100%; overflow: hidden; position: relative; }
-    iframe { position: absolute; top: -36px; left: 0; width: 100%; height: calc(100% + 36px); border: none; }
+    body { background-color: #F9EFEE; color: #1A1A1A; font-family: -apple-system, sans-serif;}
+    .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 12px 40px rgba(0,0,0,0.05); }
+    input, select { background: #FFFFFF; border: 1px solid #d9bbb1; color: #1A1A1A; }
+    /* ... el resto de tu CSS animado ... */
   </style>
 </head>
-<body>
+<body class="min-h-screen relative overflow-x-hidden p-6 max-w-md mx-auto">
 
-  <div class="iframe-container">
-    <iframe id="app-frame" src=""></iframe>
+  <div id="loader" class="flex h-screen items-center justify-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-4 border-[#d9bbb1]/30 border-t-[#D9889A]"></div>
+  </div>
+
+  <div id="login-view" class="hidden space-y-6 pt-10 pb-12 text-center">
+    <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" class="h-24 w-auto mx-auto mb-4">
+    <h1 class="text-2xl font-light text-[#8A7175]">Tu Pasaporte <span class="font-bold text-[#d9bbb1]">Essence</span></h1>
+    <p class="text-sm text-[#B59C9E] mt-2">Ingresa tu WhatsApp para ver tus stickers.</p>
+    
+    <input type="tel" id="login-telefono" placeholder="Número de WhatsApp" class="w-full rounded-xl p-4 text-sm mt-6">
+    <button onclick="iniciarSesion()" class="w-full bg-[#D9889A] text-white shadow-md py-4 rounded-full font-bold mt-4 active:scale-95">Entrar</button>
+    
+    <div class="mt-8">
+      <p class="text-xs text-[#8A7175]">¿Eres nueva en Essence?</p>
+      <button onclick="showView('register-view')" class="text-[#D9889A] font-bold text-sm underline mt-2">Crear mi pasaporte gratis</button>
+    </div>
+  </div>
+
+  <div id="register-view" class="hidden space-y-6 pt-10 pb-12">
+    <h1 class="text-2xl text-center text-[#8A7175]">Nueva Socia</h1>
+    <form id="register-form" class="space-y-4" onsubmit="handleRegister(event)">
+      <input type="text" id="reg-nombre" placeholder="Nombre completo" required class="w-full rounded-xl p-4 text-sm">
+      <input type="tel" id="reg-telefono" placeholder="WhatsApp" required class="w-full rounded-xl p-4 text-sm">
+      <input type="email" id="reg-correo" placeholder="Correo electrónico" required class="w-full rounded-xl p-4 text-sm">
+      <button type="submit" id="btn-register" class="w-full bg-[#D9889A] text-white shadow-md py-4 rounded-full font-bold mt-6">Crear Pasaporte</button>
+    </form>
+    <button onclick="showView('login-view')" class="w-full text-[#B59C9E] text-sm mt-4">Ya tengo cuenta</button>
+  </div>
+
+  <div id="dashboard-view" class="hidden space-y-8 pt-6 pb-12">
+    <h1 class="text-3xl font-light text-[#8A7175]">Hola, <span id="client-name" class="font-bold text-[#D9889A]">...</span></h1>
+     <p class="text-xs text-[#B59C9E]">Socia Essence</p>
+     <div class="glass rounded-3xl p-6 mt-6">
+        <h2 class="font-bold">Stickers: <span id="client-points">0</span></h2>
+     </div>
   </div>
 
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzWWyilV2vP41okjKIDpOWPbYbH6ZYOW3D_TIT1VFTi9I3zRyai-_SWiDT0Fi_VMbf_/exec";
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token') || "";
-    
-    // 1. GitHub lee la memoria (Safari NUNCA borra esta)
-    const savedClientId = localStorage.getItem('essence_client_id') || "";
-    
-    // 2. Le inyectamos el token y la memoria a Google
-    let finalUrl = scriptUrl + "?token=" + token;
-    if (savedClientId) {
-      finalUrl += "&client_id=" + savedClientId;
-    }
-    document.getElementById('app-frame').src = finalUrl;
+    // 1. LA CONEXIÓN INQUEBRANTABLE A GOOGLE
+    const API_URL = "https://script.google.com/macros/s/AKfycbyqjWzoPEu7ME-LpgutpixHXtcUDaaI3vtTZSqeFuJIiHjHTuGvQkzK4DBWFZsntFwc/exec"; 
 
-    // 3. Escuchamos a Google para saber cuándo guardar a alguien nuevo
-    window.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'SAVE_ID') {
-        localStorage.setItem('essence_client_id', event.data.id);
+    async function llamarAPI(action, params = {}) {
+      params.action = action;
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Bypassa Safari
+          body: JSON.stringify(params)
+        });
+        const json = await res.json();
+        if (json.success) return json.data;
+        throw new Error(json.error);
+      } catch (err) {
+        console.error("Error API:", err);
+        return null;
+      }
+    }
+
+    // 2. LÓGICA DE INICIO Y LECTURA DE QR
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenEscaneado = urlParams.get('token');
+      const savedClientId = localStorage.getItem('essence_client_id');
+
+      if (savedClientId) {
+        // Si ya está logueada y escaneó un QR de visita
+        if (tokenEscaneado) {
+          const data = await llamarAPI('addPoint', { id: savedClientId, token: tokenEscaneado });
+          if (data && !data.error) {
+             alert("¡Sticker sumado con éxito!");
+             // Limpiamos la URL para que no sume doble si recarga
+             window.history.replaceState({}, document.title, window.location.pathname);
+             cargarDashboard(savedClientId);
+          } else {
+             alert(data ? data.error : "QR Inválido o ya usado.");
+             cargarDashboard(savedClientId);
+          }
+        } else {
+          cargarDashboard(savedClientId);
+        }
+      } else {
+        // No está logueada. 
+        showView('login-view');
+        // Si escaneó el QR pero no tiene la app, guardamos el token en memoria para usarlo tras el login/registro
+        if(tokenEscaneado) sessionStorage.setItem('pending_token', tokenEscaneado);
       }
     });
-  </script>
 
+    function showView(id) {
+      ['loader', 'login-view', 'register-view', 'dashboard-view'].forEach(v => document.getElementById(v).classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    // 3. FUNCIONES DE USUARIO
+    async function iniciarSesion() {
+      const tel = document.getElementById('login-telefono').value;
+      if(!tel) return alert("Ingresa tu número");
+      
+      const btn = event.target; btn.innerText = "Buscando...";
+      const userData = await llamarAPI('login', { telefono: tel });
+      
+      if (userData && userData.id) {
+        localStorage.setItem('essence_client_id', userData.id);
+        const pendingToken = sessionStorage.getItem('pending_token');
+        if(pendingToken) {
+           await llamarAPI('addPoint', { id: userData.id, token: pendingToken });
+           sessionStorage.removeItem('pending_token');
+           alert("¡Sticker sumado!");
+           window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        cargarDashboard(userData.id);
+      } else {
+        alert("Número no encontrado. Verifica o regístrate.");
+        btn.innerText = "Entrar";
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-register');
+      btn.innerText = "Creando...";
+      
+      const formData = {
+        nombre: document.getElementById('reg-nombre').value,
+        telefono: document.getElementById('reg-telefono').value,
+        correo: document.getElementById('reg-correo').value,
+        // Agrega aquí IG, Cumple, etc.
+      };
+      
+      const token = sessionStorage.getItem('pending_token') || "";
+      const result = await llamarAPI('register', { data: formData, token: token });
+      
+      if (result && result.id) {
+        localStorage.setItem('essence_client_id', result.id);
+        sessionStorage.removeItem('pending_token');
+        cargarDashboard(result.id);
+      } else {
+        alert("Error al registrar.");
+        btn.innerText = "Crear Pasaporte";
+      }
+    }
+
+    async function cargarDashboard(id) {
+      showView('loader');
+      const data = await llamarAPI('getDashboard', { id: id });
+      if (data) {
+        document.getElementById('client-name').innerText = data.nombre.split(' ')[0];
+        document.getElementById('client-points').innerText = data.puntos;
+        // ... (Aquí va tu lógica original para dibujar los puntitos redondos) ...
+        showView('dashboard-view');
+      } else {
+        localStorage.removeItem('essence_client_id');
+        showView('login-view');
+      }
+    }
+  </script>
 </body>
 </html>
