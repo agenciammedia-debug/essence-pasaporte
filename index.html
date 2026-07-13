@@ -4,10 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Essence Studio | Pasaporte</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#F9EFEE">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Essence">
+  <link rel="apple-touch-icon" href="icon.png">
+
   <style>
     body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #F9EFEE; }
     .iframe-container { width: 100%; height: 100%; overflow: hidden; position: relative; }
-    iframe { position: absolute; top: -36px; left: 0; width: 100%; height: calc(100% + 36px); border: none; }
+    /* Ajuste para que el iframe ocupe todo sin bordes blancos */
+    iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
   </style>
 </head>
 <body>
@@ -21,22 +30,31 @@
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token') || "";
     
-    // 1. GitHub lee la memoria (Safari NUNCA borra esta)
+    // 1. GitHub lee la memoria permanente (Safari no borra esta)
     const savedClientId = localStorage.getItem('essence_client_id') || "";
     
-    // 2. Le inyectamos el token y la memoria a Google
+    // 2. Inyectamos el token y la memoria a Google
     let finalUrl = scriptUrl + "?token=" + token;
     if (savedClientId) {
       finalUrl += "&client_id=" + savedClientId;
     }
     document.getElementById('app-frame').src = finalUrl;
 
-    // 3. Escuchamos a Google para saber cuándo guardar a alguien nuevo
+    // 3. Escuchamos a Google para saber cuándo guardar a una clienta nueva
     window.addEventListener('message', function(event) {
       if (event.data && event.data.type === 'SAVE_ID') {
         localStorage.setItem('essence_client_id', event.data.id);
       }
     });
+
+    // 4. Activamos el motor PWA para que se pueda instalar en el teléfono
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => console.log('ServiceWorker registrado con éxito.'))
+          .catch(err => console.log('Fallo en ServiceWorker: ', err));
+      });
+    }
   </script>
 
 </body>
