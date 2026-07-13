@@ -69,7 +69,6 @@
           const url = new URL(decodedText);
           const scannedToken = url.searchParams.get("token");
           if (scannedToken) {
-            // Le inyectamos el token directamente al iframe de Google
             document.getElementById('app-frame').contentWindow.postMessage({ type: 'QR_SCANNED', token: scannedToken }, '*');
             cerrarEscanerNativo();
           } else {
@@ -78,6 +77,9 @@
         } catch(e) {
           alert("Código escaneado no válido.");
         }
+      }).then(() => {
+        // AVISO DE ÉXITO: Le avisa a Google que la cámara ya está encendida en la capa superior
+        document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_READY_ONBOARDING' }, '*');
       }).catch(err => {
         alert("Por favor, permite el acceso a la cámara en la configuración de tu teléfono para poder escanear.");
         cerrarEscanerNativo();
