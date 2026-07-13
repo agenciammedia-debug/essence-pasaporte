@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Essence Studio | Pasaporte</title>
   
+  <!-- Acelera la conexión con los servidores de Google -->
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#F9EFEE">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,11 +18,22 @@
     body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #F9EFEE; }
     .iframe-container { width: 100%; height: 100%; overflow: hidden; position: relative; }
     iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+    
+    /* CARGADOR NATIVO ULTRARRÁPIDO */
+    #fast-loader { position: fixed; inset: 0; background-color: #F9EFEE; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
+    .spinner { width: 40px; height: 40px; border: 4px solid rgba(217, 136, 154, 0.2); border-top-color: #D9889A; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
   
+  <!-- ESTE CARGADOR APARECE EN 0.01 SEGUNDOS -->
+  <div id="fast-loader">
+    <div class="spinner"></div>
+    <p style="margin-top: 16px; color: #8A7175; font-family: -apple-system, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px;">CARGANDO</p>
+  </div>
+
   <div id="scanner-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); font-family:-apple-system,sans-serif; flex-direction:column; align-items:center; justify-content:center; padding:24px;">
     <div style="background:white; width:100%; max-width:360px; padding:24px; border-radius:28px; box-shadow:0 20px 40px rgba(0,0,0,0.3); text-align:center; border:1px solid rgba(255,255,255,0.8);">
       <h3 style="color:#8A7175; margin-top:0; margin-bottom:16px; font-weight:600; font-size:18px;">Escanea tu código de sello</h3>
@@ -34,35 +47,37 @@
   </div>
 
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbxErm6Oce6iQ_OtXaZzxtBFetjtCAbHppauZCy6B6OJkv6MBxOxrUK4oKzi7vGR-S5z/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwjXO7tFaQVVNYxZ_i7Y8G7Xs7QoJme3gLPIEvr5FNmmJ76uZDqdG-XBe6CpZfYKCb3/exec";
     
-    // 1. Detectar PWA y limpiar el "Ghost Token" de Apple
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     let token = new URLSearchParams(window.location.search).get('token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
 
-    // Si abre la App instalada y ya tiene su ID guardado, ELIMINAMOS el token fantasma
-    if (isStandalone && currentClientId) {
-      token = ""; 
-    }
+    if (isStandalone && currentClientId) { token = ""; }
 
-    // 2. Función maestra para cargar/recargar Google Apps Script con el nuevo token
     function loadIframe(qrToken) {
-      let finalUrl = scriptUrl + "?t=" + new Date().getTime(); // Evita que iOS congele la pantalla
+      let finalUrl = scriptUrl + "?t=" + new Date().getTime(); 
       if (qrToken) finalUrl += "&token=" + qrToken;
       if (currentClientId) finalUrl += "&client_id=" + currentClientId;
-      document.getElementById('app-frame').src = finalUrl;
+      
+      const iframe = document.getElementById('app-frame');
+      
+      // CUANDO GOOGLE TERMINA DE CARGAR, APAGAMOS EL CARGADOR RÁPIDO
+      iframe.onload = function() {
+        document.getElementById('fast-loader').style.opacity = '0';
+        setTimeout(() => document.getElementById('fast-loader').style.display = 'none', 400);
+      };
+      
+      iframe.src = finalUrl;
     }
 
-    // Carga inicial
     loadIframe(token);
 
-    // 3. Comunicación constante con Google
     let html5QrcodeScanner = null;
 
     window.addEventListener('message', function(event) {
       if (event.data && event.data.type === 'SAVE_ID') {
-        currentClientId = event.data.id; // Actualiza en memoria RAM
+        currentClientId = event.data.id; 
         localStorage.setItem('essence_client_id', currentClientId);
       }
       if (event.data && event.data.type === 'OPEN_SCANNER') {
@@ -70,11 +85,9 @@
       }
     });
 
-    // 4. Lógica de la Cámara Robusta
     function abrirEscanerNativo() {
       document.getElementById('scanner-modal').style.display = 'flex';
       html5QrcodeScanner = new Html5Qrcode("reader");
-      
       const config = { fps: 12, qrbox: { width: 250, height: 250 } };
       
       html5QrcodeScanner.start({ facingMode: "environment" }, config, (decodedText) => {
@@ -82,38 +95,24 @@
           const url = new URL(decodedText);
           const scannedToken = url.searchParams.get("token");
           if (scannedToken) {
-            // TRUCO MAESTRO: En lugar de enviar mensajes, recargamos el iframe con el nuevo Token
-            document.getElementById('app-frame').contentWindow.postMessage({ type: 'SHOW_LOADER' }, '*');
+            document.getElementById('fast-loader').style.display = 'flex';
+            document.getElementById('fast-loader').style.opacity = '1';
             loadIframe(scannedToken);
             cerrarEscanerNativo();
-          } else {
-            alert("El código QR escaneado no pertenece a un sello válido.");
-          }
-        } catch(e) {
-          alert("Código escaneado no válido.");
-        }
-      }).then(() => {
-        // Le avisa a Google que apague el estado "Solicitando..." en el onboarding
-        document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_READY_ONBOARDING' }, '*');
+          } else { alert("El código QR no es válido."); }
+        } catch(e) { alert("Código escaneado no válido."); }
       }).catch(err => {
-        alert("Por favor, permite el acceso a la cámara en la configuración de tu teléfono.");
+        alert("Por favor, permite el acceso a la cámara.");
         cerrarEscanerNativo();
       });
     }
 
     function cerrarEscanerNativo() {
       document.getElementById('scanner-modal').style.display = 'none';
-      if (html5QrcodeScanner) {
-        html5QrcodeScanner.stop().then(() => { html5QrcodeScanner = null; }).catch(e => {});
-      }
+      if (html5QrcodeScanner) { html5QrcodeScanner.stop().catch(e => {}); }
     }
 
-    // 5. Instalar PWA
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => {});
-      });
-    }
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => {}); }); }
   </script>
 </body>
 </html>
