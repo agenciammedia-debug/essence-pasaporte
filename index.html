@@ -18,35 +18,86 @@
     /* Ajuste para que el iframe ocupe todo sin bordes blancos */
     iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
   </style>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
-
+<div id="scanner-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); font-family:-apple-system,sans-serif; flex-direction:column; align-items:center; justify-content:center; padding:24px;">
+    <div style="background:white; width:100%; max-w:360px; padding:24px; border-radius:28px; box-shadow:0 20px 40px rgba(0,0,0,0.3); text-align:center; border:1px solid rgba(255,255,255,0.8);">
+      <h3 style="color:#8A7175; margin-top:0; margin-bottom:16px; font-weight:600; font-size:18px;">Escanea tu código de sello</h3>
+      <div id="reader" style="width:100%; border-radius:20px; overflow:hidden; background:black;"></div>
+      <button onclick="cerrarEscanerNativo()" style="width:100%; margin-top:20px; background:#8A7175; color:white; border:none; padding:15px; border-radius:980px; font-weight:bold; font-size:14px; transition:all 0.2s; cursor:pointer;">Cancelar</button>
+    </div>
+  </div>
   <div class="iframe-container">
     <!-- En tu index.html de GitHub -->
 <iframe id="app-frame" src="" allow="camera *; microphone *; autoplay *;"></iframe>
   </div>
 
-  <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzjkT_HEPKWwIKKwpeLL3GfpujCLC7oSQDk24QOJLr6FVzifnSQG5kGIVxcrppFTK2z/exec";
+ const scriptUrl = "https://script.google.com/macros/s/AKfycbzjkT_HEPKWwIKKwpeLL3GfpujCLC7oSQDk24QOJLr6FVzifnSQG5kGIVxcrppFTK2z/exec";
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token') || "";
     
-    // 1. GitHub lee la memoria permanente (Safari no borra esta)
     const savedClientId = localStorage.getItem('essence_client_id') || "";
     
-    // 2. Inyectamos el token y la memoria a Google
     let finalUrl = scriptUrl + "?token=" + token;
     if (savedClientId) {
       finalUrl += "&client_id=" + savedClientId;
     }
     document.getElementById('app-frame').src = finalUrl;
 
-    // 3. Escuchamos a Google para saber cuándo guardar a una clienta nueva
+    // ESCUCHA DE MENSAJES DESDE GOOGLE APPS SCRIPT
+    let html5QrcodeScanner = null;
+
     window.addEventListener('message', function(event) {
       if (event.data && event.data.type === 'SAVE_ID') {
         localStorage.setItem('essence_client_id', event.data.id);
       }
+      // Nueva orden: Abrir cámara desde la capa superior
+      if (event.data && event.data.type === 'OPEN_SCANNER') {
+        abrirEscanerNativo();
+      }
     });
+
+    function abrirEscanerNativo() {
+      document.getElementById('scanner-modal').style.display = 'flex';
+      html5QrcodeScanner = new Html5Qrcode("reader");
+      
+      const config = { fps: 12, qrbox: { width: 250, height: 250 } };
+      
+      html5QrcodeScanner.start({ facingMode: "environment" }, config, (decodedText) => {
+        try {
+          const url = new URL(decodedText);
+          const scannedToken = url.searchParams.get("token");
+          if (scannedToken) {
+            // Le inyectamos el token directamente al iframe de Google
+            document.getElementById('app-frame').contentWindow.postMessage({ type: 'QR_SCANNED', token: scannedToken }, '*');
+            cerrarEscanerNativo();
+          } else {
+            alert("El código QR escaneado no pertenece a un sello válido.");
+          }
+        } catch(e) {
+          alert("Código escaneado no válido.");
+        }
+      }).catch(err => {
+        alert("Por favor, permite el acceso a la cámara en la configuración de tu teléfono para poder escanear.");
+        cerrarEscanerNativo();
+      });
+    }
+
+    function cerrarEscanerNativo() {
+      document.getElementById('scanner-modal').style.display = 'none';
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => { html5QrcodeScanner = null; }).catch(e => {});
+      }
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(registration => console.log('ServiceWorker registrado.'))
+          .catch(err => console.log('Fallo en ServiceWorker: ', err));
+      });
+    }
 
     // Escuchar si la app pide abrir el permiso nativo
     window.addEventListener('message', function(event) {
