@@ -15,7 +15,6 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #F9EFEE; }
     .iframe-container { width: 100%; height: 100%; overflow: hidden; position: relative; }
-    /* Ajuste para que el iframe ocupe todo sin bordes blancos */
     iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
   </style>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
@@ -34,33 +33,44 @@
     <iframe id="app-frame" src="" allow="camera *; microphone *; autoplay *;"></iframe>
   </div>
 
-  <!-- AQUI FALTABA ESTA ETIQUETA: -->
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzGIz3_S6rpYJ3U9WBo4VKnBCsV0a7veVGaHCJN9-uoBlfa6RtLVhrP0VOLG3Ja8cMr/exec";
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token') || "";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwjXO7tFaQVVNYxZ_i7Y8G7Xs7QoJme3gLPIEvr5FNmmJ76uZDqdG-XBe6CpZfYKCb3/exec";
     
-    const savedClientId = localStorage.getItem('essence_client_id') || "";
-    
-    let finalUrl = scriptUrl + "?token=" + token;
-    if (savedClientId) {
-      finalUrl += "&client_id=" + savedClientId;
-    }
-    document.getElementById('app-frame').src = finalUrl;
+    // 1. Detectar PWA y limpiar el "Ghost Token" de Apple
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    let token = new URLSearchParams(window.location.search).get('token') || "";
+    let currentClientId = localStorage.getItem('essence_client_id') || "";
 
-    // ESCUCHA DE MENSAJES DESDE GOOGLE APPS SCRIPT
+    // Si abre la App instalada y ya tiene su ID guardado, ELIMINAMOS el token fantasma
+    if (isStandalone && currentClientId) {
+      token = ""; 
+    }
+
+    // 2. Función maestra para cargar/recargar Google Apps Script con el nuevo token
+    function loadIframe(qrToken) {
+      let finalUrl = scriptUrl + "?t=" + new Date().getTime(); // Evita que iOS congele la pantalla
+      if (qrToken) finalUrl += "&token=" + qrToken;
+      if (currentClientId) finalUrl += "&client_id=" + currentClientId;
+      document.getElementById('app-frame').src = finalUrl;
+    }
+
+    // Carga inicial
+    loadIframe(token);
+
+    // 3. Comunicación constante con Google
     let html5QrcodeScanner = null;
 
     window.addEventListener('message', function(event) {
       if (event.data && event.data.type === 'SAVE_ID') {
-        localStorage.setItem('essence_client_id', event.data.id);
+        currentClientId = event.data.id; // Actualiza en memoria RAM
+        localStorage.setItem('essence_client_id', currentClientId);
       }
-      // Nueva orden: Abrir cámara desde la capa superior
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
       }
     });
 
+    // 4. Lógica de la Cámara Robusta
     function abrirEscanerNativo() {
       document.getElementById('scanner-modal').style.display = 'flex';
       html5QrcodeScanner = new Html5Qrcode("reader");
@@ -72,7 +82,9 @@
           const url = new URL(decodedText);
           const scannedToken = url.searchParams.get("token");
           if (scannedToken) {
-            document.getElementById('app-frame').contentWindow.postMessage({ type: 'QR_SCANNED', token: scannedToken }, '*');
+            // TRUCO MAESTRO: En lugar de enviar mensajes, recargamos el iframe con el nuevo Token
+            document.getElementById('app-frame').contentWindow.postMessage({ type: 'SHOW_LOADER' }, '*');
+            loadIframe(scannedToken);
             cerrarEscanerNativo();
           } else {
             alert("El código QR escaneado no pertenece a un sello válido.");
@@ -81,10 +93,10 @@
           alert("Código escaneado no válido.");
         }
       }).then(() => {
-        // AVISO DE ÉXITO: Le avisa a Google que la cámara ya está encendida en la capa superior
+        // Le avisa a Google que apague el estado "Solicitando..." en el onboarding
         document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_READY_ONBOARDING' }, '*');
       }).catch(err => {
-        alert("Por favor, permite el acceso a la cámara en la configuración de tu teléfono para poder escanear.");
+        alert("Por favor, permite el acceso a la cámara en la configuración de tu teléfono.");
         cerrarEscanerNativo();
       });
     }
@@ -96,29 +108,12 @@
       }
     }
 
-    // Escuchar si la app pide abrir el permiso nativo (RESPALDO POR SI ACASO)
-    window.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'REQUEST_CAMERA') {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-          .then(function(stream) {
-            stream.getTracks().forEach(track => track.stop());
-            document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_GRANTED' }, '*');
-          })
-          .catch(function(err) {
-            document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_DENIED' }, '*');
-          });
-      }
-    });
-
-    // Activamos el motor PWA para que se pueda instalar en el teléfono
+    // 5. Instalar PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(registration => console.log('ServiceWorker registrado con éxito.'))
-          .catch(err => console.log('Fallo en ServiceWorker: ', err));
+        navigator.serviceWorker.register('sw.js').catch(err => {});
       });
     }
   </script>
-
 </body>
 </html>
