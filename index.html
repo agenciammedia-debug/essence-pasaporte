@@ -34,6 +34,7 @@
     <iframe id="app-frame" src="" allow="camera *; microphone *; autoplay *;"></iframe>
   </div>
 
+  <!-- AQUI FALTABA ESTA ETIQUETA: -->
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbwjXO7tFaQVVNYxZ_i7Y8G7Xs7QoJme3gLPIEvr5FNmmJ76uZDqdG-XBe6CpZfYKCb3/exec";
     const urlParams = new URLSearchParams(window.location.search);
@@ -58,7 +59,7 @@
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
       }
-    
+    });
 
     function abrirEscanerNativo() {
       document.getElementById('scanner-modal').style.display = 'flex';
@@ -94,6 +95,20 @@
         html5QrcodeScanner.stop().then(() => { html5QrcodeScanner = null; }).catch(e => {});
       }
     }
+
+    // Escuchar si la app pide abrir el permiso nativo (RESPALDO POR SI ACASO)
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'REQUEST_CAMERA') {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+          .then(function(stream) {
+            stream.getTracks().forEach(track => track.stop());
+            document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_GRANTED' }, '*');
+          })
+          .catch(function(err) {
+            document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_DENIED' }, '*');
+          });
+      }
+    });
 
     // Activamos el motor PWA para que se pueda instalar en el teléfono
     if ('serviceWorker' in navigator) {
