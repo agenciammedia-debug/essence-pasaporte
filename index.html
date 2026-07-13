@@ -48,6 +48,21 @@
       }
     });
 
+    // Escuchar si la app pide abrir el permiso nativo
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'REQUEST_CAMERA') {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+          .then(function(stream) {
+            stream.getTracks().forEach(track => track.stop());
+            // Si funcionó, le avisamos de vuelta a Google
+            document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_GRANTED' }, '*');
+          })
+          .catch(function(err) {
+            document.getElementById('app-frame').contentWindow.postMessage({ type: 'CAMERA_DENIED' }, '*');
+          });
+      }
+    });
+
     // 4. Activamos el motor PWA para que se pueda instalar en el teléfono
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
