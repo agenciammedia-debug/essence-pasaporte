@@ -1,201 +1,194 @@
-// URL DE TU NUEVO BACKEND EN APPS SCRIPT
 const API_URL = 'https://script.google.com/macros/s/AKfycbyq78buU3wKy7kX5FELLdHCMn8x4VjZDp0elKRVyNRcvpd1l30qQbkuYme_qP8NkllB/exec';
 
-// Referencias al DOM
-const loader = document.getElementById('loader');
-const loginScreen = document.getElementById('login-screen');
-const dashboardScreen = document.getElementById('dashboard-screen');
-
-// Inicialización de la App
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Registrar Service Worker para PWA
+    // Registro del Service Worker
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/essence-pasaporte/sw.js').catch(err => console.log('Error en SW:', err));
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
     }
 
-    // 2. Revisar si hay un escaneo de QR (Token) en la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-
-    // 3. Revisar sesión persistente (Soluciona el problema de Safari)
     const storedId = localStorage.getItem('essence_client_id');
     
+    // Si ya existe sesión
     if (storedId) {
-        await cargarDashboard(storedId, token);
+        await cargarPasaporte(storedId, window.tokenEscaneado);
     } else {
-        ocultarCarga();
-        loginScreen.classList.remove('hidden');
-        loginScreen.classList.add('flex');
+        // Mostrar pantalla de ingreso/registro
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('register-view').classList.remove('hidden');
     }
+
+    // Solicitar Push si están bloqueados
+    verificarBotonPush();
 });
 
-// Función central para hacer peticiones POST al backend evitando CORS
+// Función de Conexión Universal API
 async function apiCall(action, payload) {
     try {
-        const body = JSON.stringify({ action: action, ...payload });
         const response = await fetch(API_URL, {
             method: 'POST',
-            body: body
+            body: JSON.stringify({ action: action, ...payload })
         });
-        const data = await response.json();
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error("Error conectando al servidor:", error);
-        alert("Hubo un problema de conexión. Intenta de nuevo.");
+        console.error("Error API:", error);
         return null;
     }
 }
 
-// Lógica del Login
-document.getElementById('btn-ingresar').addEventListener('click', async () => {
-    const telefono = document.getElementById('input-telefono').value.trim();
-    if (telefono.length < 9) return alert("Por favor ingresa un teléfono válido.");
+// Control del Formulario (Ingreso / Registro)
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const telefono = document.getElementById('reg-telefono').value.trim();
+    const extraFields = document.getElementById('extra-fields');
 
-    mostrarCarga();
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    
-    // Obtener ID de OneSignal si está suscrito
+    document.getElementById('loader').classList.remove('hidden');
     const oneSignalId = await getOneSignalId();
 
+    // 1. Verificamos si el número existe
     const data = await apiCall('checkClient', { telefono: telefono });
-    
+
     if (data && data.existe) {
-        // Loguearse y sumar punto si hay QR
-        if (token) {
-            const addReq = await apiCall('addSticker', { clientId: data.client.id, token: token, oneSignalId: oneSignalId });
-            if (addReq && addReq.status === 'OK') {
-                localStorage.setItem('essence_client_id', addReq.nuevoId || data.client.id);
-                alert("¡Sticker añadido exitosamente!");
-            }
-        } else {
-            localStorage.setItem('essence_client_id', data.client.id);
-        }
-        await cargarDashboard(localStorage.getItem('essence_client_id'), null);
+        // Ya es socia, ingresar
+        localStorage.setItem('essence_client_id', data.client.id);
+        await cargarPasaporte(data.client.id, window.tokenEscaneado);
     } else {
-        // Redirigir a registro (Aquí puedes abrir un modal de registro. Por simplicidad, simularemos un registro rápido)
-        const nombre = prompt("¡Nueva socia! ¿Cuál es tu nombre?");
-        if (nombre) {
+        // Es nueva. Si los campos extras están ocultos, los mostramos para que complete
+        if (extraFields.classList.contains('hidden')) {
+            document.getElementById('loader').classList.add('hidden');
+            extraFields.classList.remove('hidden');
+            document.getElementById('btn-register').innerText = "Crear Pasaporte";
+            document.getElementById('reg-nombre').required = true;
+            document.getElementById('reg-mes').required = true;
+        } else {
+            // Registrar a la nueva socia
+            const nombre = document.getElementById('reg-nombre').value;
+            const instagram = document.getElementById('reg-ig').value;
+            const cumple = document.getElementById('reg-mes').value;
+            const correo = document.getElementById('reg-correo').value;
+
             const regReq = await apiCall('registerClient', { 
-                clientData: { nombre, telefono, instagram: '', cumple: '', correo: '' }, 
-                token: token, 
+                clientData: { nombre, telefono, instagram, cumple, correo }, 
+                token: window.tokenEscaneado, 
                 oneSignalId: oneSignalId 
             });
+
             if (regReq && regReq.success) {
                 localStorage.setItem('essence_client_id', regReq.id);
-                await cargarDashboard(regReq.id, null);
+                await cargarPasaporte(regReq.id, null);
             }
-        } else {
-            ocultarCarga();
         }
     }
 });
 
-// Cargar información del Dashboard
-async function cargarDashboard(clientId, token) {
-    mostrarCarga();
-    const oneSignalId = await getOneSignalId();
+// Cargar Datos en la Vista de Tarjeta Premium
+async function cargarPasaporte(clientId, tokenUrl) {
+    document.getElementById('loader').classList.remove('hidden');
+    document.getElementById('register-view').classList.add('hidden');
     
-    // Si entró con un Token (QR) estando ya logueado previamente
-    if (token) {
-        const addReq = await apiCall('addSticker', { clientId: clientId, token: token, oneSignalId: oneSignalId });
+    const oneSignalId = await getOneSignalId();
+
+    // Sumar token si proviene de QR
+    if (tokenUrl) {
+        const addReq = await apiCall('addSticker', { clientId: clientId, token: tokenUrl, oneSignalId: oneSignalId });
         if (addReq && addReq.status === 'OK') {
             clientId = addReq.nuevoId || clientId;
             localStorage.setItem('essence_client_id', clientId);
-            alert("¡Nuevo sticker escaneado con éxito! 💖");
-            // Limpiar la URL para evitar recargas accidentales
+            mostrarToast();
             window.history.replaceState({}, document.title, window.location.pathname);
-        } else if (addReq && addReq.error === 'QR_USADO') {
-            alert("Este código QR ya ha sido utilizado o es inválido.");
-            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            if(addReq.isMilestone === 5) mostrarCelebracion("¡Mitad de Pasaporte!", "Tienes 50% OFF en tu próximo servicio.");
+            if(addReq.isMilestone === 10) mostrarCelebracion("¡Pasaporte Lleno!", "¡Tienes un Servicio Gratis esperando por ti!");
         }
     }
 
+    // Obtener datos finales para pintar UI
     const userData = await apiCall('getClientData', { clientId: clientId, oneSignalId: oneSignalId });
     
     if (userData) {
-        document.getElementById('user-name').innerText = userData.nombre.split(" ")[0];
-        document.getElementById('user-points').innerText = userData.puntos;
-        renderStickers(userData.puntos);
+        document.getElementById('client-name').innerText = userData.nombre.split(" ")[0];
+        document.getElementById('client-points').innerText = userData.puntos;
+        pintarStickersUI(userData.puntos);
         
-        loginScreen.classList.add('hidden');
-        loginScreen.classList.remove('flex');
-        dashboardScreen.classList.remove('hidden');
-        dashboardScreen.classList.add('flex');
-        
-        // Solicitar permisos Push si no los tiene
-        gestionarBotonPush();
+        document.getElementById('loader').classList.add('hidden');
+        document.getElementById('dashboard-view').classList.remove('hidden');
     } else {
-        // Si el ID ya no existe (borrado de BD)
         localStorage.removeItem('essence_client_id');
-        loginScreen.classList.remove('hidden');
-        loginScreen.classList.add('flex');
+        location.reload();
     }
-    ocultarCarga();
 }
 
-// Dibuja los círculos del pasaporte
-function renderStickers(puntos) {
+// Pintar stickers conservando tus estilos y colores exactos
+function pintarStickersUI(puntos) {
     const grid = document.getElementById('stickers-grid');
     grid.innerHTML = '';
     
     for (let i = 1; i <= 10; i++) {
         const div = document.createElement('div');
-        div.className = "aspect-square rounded-full flex items-center justify-center text-lg font-bold border-2 transition-all duration-500";
+        div.className = "aspect-square rounded-full flex items-center justify-center text-lg font-bold border-2 transition-all duration-500 relative bg-white border-[#d9bbb1]/30 text-[#d9bbb1]/40";
         
         if (i <= puntos) {
-            div.classList.add('bg-pink-500', 'border-pink-500', 'text-white', 'shadow-md', 'scale-105');
-            div.innerHTML = '<i class="fas fa-heart"></i>'; // Sello activo
+            // Sello Activo
+            div.className = "aspect-square rounded-full flex items-center justify-center text-lg font-bold border-2 transition-all duration-500 relative bg-[#D9889A] border-[#D9889A] text-white shadow-md transform scale-105";
+            div.innerHTML = '💕'; 
         } else {
-            div.classList.add('bg-gray-50', 'border-gray-200', 'text-gray-300');
+            // Vacío
             div.innerText = i;
         }
 
-        // Marcar metas (5 y 10)
+        // Estilos especiales para el 5 y 10 (las metas)
         if (i === 5 || i === 10) {
-            div.classList.add('ring-4', 'ring-pink-100');
-            if (i > puntos) div.innerHTML = '<i class="fas fa-gift"></i>';
+            if (i > puntos) {
+                div.classList.add('border-[#D9889A]', 'text-[#D9889A]', 'bg-[#FFF5F7]');
+                div.innerHTML = '🎁';
+                if (i === puntos + 1) div.classList.add('animate-latido'); // Próxima meta late
+            }
         }
         
         grid.appendChild(div);
     }
-
-    const msg = document.getElementById('mensaje-meta');
-    if (puntos < 5) msg.innerText = `Faltan ${5 - puntos} stickers para tu 50% OFF 🎉`;
-    else if (puntos >= 5 && puntos < 10) msg.innerText = `Faltan ${10 - puntos} stickers para tu Servicio GRATIS 🎁`;
-    else msg.innerText = "¡Pasaporte Completo! Reclama tu premio. ✨";
 }
 
-// Helpers de Interfaz
-function mostrarCarga() { loader.classList.remove('opacity-0', 'pointer-events-none'); }
-function ocultarCarga() { loader.classList.add('opacity-0', 'pointer-events-none'); }
+// Animaciones de tu diseño (Toasts y Modal)
+function mostrarToast() {
+    const toast = document.getElementById('toast-nuevo-sticker');
+    toast.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+    }, 4000);
+}
 
-document.getElementById('btn-logout').addEventListener('click', () => {
-    if(confirm("¿Segura que deseas cerrar sesión?")) {
-        localStorage.removeItem('essence_client_id');
-        location.reload();
-    }
-});
+function mostrarCelebracion(titulo, desc) {
+    const modal = document.getElementById('celebration-modal');
+    const card = document.getElementById('celebration-card');
+    document.getElementById('celebration-title').innerText = titulo;
+    document.getElementById('celebration-desc').innerText = desc;
+    
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        card.classList.remove('scale-90');
+    }, 50);
+}
 
-// Integración OneSignal Asíncrona
+// Funciones Notificaciones Push (OneSignal)
 async function getOneSignalId() {
     return new Promise((resolve) => {
+        if(!window.OneSignalDeferred) return resolve(null);
         window.OneSignalDeferred.push(async function(OneSignal) {
             const isPushSupported = OneSignal.Notifications.isPushSupported();
-            if (!isPushSupported) resolve(null);
-            
+            if (!isPushSupported) return resolve(null);
             const userId = await OneSignal.User.PushSubscription.id;
             resolve(userId);
         });
-        setTimeout(() => resolve(null), 1500); // Timeout fallback
+        setTimeout(() => resolve(null), 1500);
     });
 }
 
-function gestionarBotonPush() {
+function verificarBotonPush() {
+    if(!window.OneSignalDeferred) return;
     window.OneSignalDeferred.push(async function(OneSignal) {
         const hasPermission = await OneSignal.Notifications.permission;
-        const btn = document.getElementById('btn-notificaciones');
-        
+        const btn = document.getElementById('btn-activar-push');
         if (hasPermission !== "granted") {
             btn.classList.remove('hidden');
             btn.addEventListener('click', () => {
