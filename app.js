@@ -1,4 +1,4 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbyq78buU3wKy7kX5FELLdHCMn8x4VjZDp0elKRVyNRcvpd1l30qQbkuYme_qP8NkllB/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyAlLxHtkUh0GrcRsZkX7D4VO9x48uo7YJmqnP3UcQ5vzpP73ZKgPY6Vv1Fnf_H-J5e/exec';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Registro del Service Worker
