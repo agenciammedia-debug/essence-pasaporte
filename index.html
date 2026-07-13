@@ -4,23 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Essence Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
 
-<!-- PWA Manifest & OneSignal -->
+<!-- PWA Tags & OneSignal -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#F9EFEE">
-
-<!-- OneSignal SDK -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
+  window.OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "13d38867-03ad-4522-ba18-d7dd224ea2bd",
     });
   });
 </script>
 
-<script src="https://cdn.tailwindcss.com"></script>
 <style>
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -34,7 +32,6 @@
     border: 1px solid rgba(255, 255, 255, 1);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
   }
-   /* --- BORDES DE LOS CAMPOS ACTUALIZADOS --- */
   input, select {
     background: #FFFFFF;
     border: 1px solid #d9bbb1;
@@ -56,7 +53,6 @@
     transform-origin: center;
   }
 
-  /* --- ANIMACIÓN DE LATIDO PREMIUM PARA LA META --- */
   @keyframes latido-premium {
     0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(217, 136, 154, 0.5); }
     50% { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(217, 136, 154, 0); }
@@ -74,22 +70,39 @@
   <div class="animate-spin rounded-full h-12 w-12 border-4 border-[#d9bbb1]/30 border-t-[#D9889A]"></div>
 </div>
 
+<!-- NUEVA PANTALLA EXCLUSIVA: PASO PREVIO PARA DESCARGAR / INSTALAR LA APP -->
+<div id="install-view" class="hidden space-y-6 pt-10 pb-12 text-center">
+  <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" alt="Essence Logo" class="h-24 w-auto mx-auto mb-4 object-contain">
+  <h1 class="text-2xl font-light text-[#8A7175]">Instala tu Pasaporte</h1>
+  <p class="text-sm text-[#B59C9E] font-medium px-4">Para recibir tus stickers y alertas de premios, primero debes guardar la app en tu teléfono.</p>
+  
+  <div class="glass rounded-2xl p-6 text-left border border-[#d9bbb1]/50 space-y-4">
+    <p class="text-xs font-bold uppercase tracking-wider text-[#D9889A]">📱 En iPhone (Safari):</p>
+    <p class="text-xs text-gray-600">Presiona el botón de <strong>Compartir</strong> <span class="text-blue-500">⎋</span> en la barra de abajo y selecciona <strong>"Agregar a Inicio"</strong> ➕.</p>
+    
+    <div class="border-t border-[#d9bbb1]/20 my-2"></div>
+    
+    <p class="text-xs font-bold uppercase tracking-wider text-[#D9889A]">🤖 En Android:</p>
+    <p class="text-xs text-gray-600">Presiona los 3 puntos de la esquina superior y selecciona <strong>"Instalar Aplicación"</strong> o acepta la barra emergente inferior.</p>
+  </div>
+  <p class="text-[11px] text-[#B59C9E] animate-pulse">Una vez instalada, ábrela desde tu pantalla de inicio ✨</p>
+</div>
+
+<!-- PANTALLA DE REGISTRO E INGRESO (SIN EMAIL) -->
 <div id="register-view" class="hidden space-y-6 pt-10 pb-12">
    <div class="text-center mb-8">
     <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" alt="Essence Logo" class="h-24 w-auto mx-auto mb-4 object-contain">
     <h1 class="text-2xl font-light text-[#8A7175]">Bienvenida a <span class="font-bold text-[#d9bbb1]">Essence</span></h1>
-    <p class="text-sm text-[#B59C9E] mt-2 font-medium">Ingresa tu número para acceder a tu pasaporte.</p>
+    <p class="text-sm text-[#B59C9E] mt-2 font-medium">Ingresa tu número de WhatsApp para ver tu pasaporte.</p>
   </div>
 
   <form id="register-form" class="space-y-4">
-    <input type="tel" id="reg-telefono" placeholder="WhatsApp (Ej: 987654321)" required class="w-full rounded-xl p-4 text-sm appearance-none">
+    <input type="tel" id="reg-telefono" placeholder="WhatsApp" required class="w-full rounded-xl p-4 text-sm appearance-none">
     
-    <!-- Campos que se mostrarán solo si es clienta nueva -->
+    <!-- Campos dinámicos si la clienta no existe -->
     <div id="extra-fields" class="hidden space-y-4">
         <input type="text" id="reg-nombre" placeholder="Nombre completo" class="w-full rounded-xl p-4 text-sm appearance-none">
-        <div class="relative">
-          <input type="text" id="reg-ig" placeholder="Usuario de Instagram (Ej: @maria)" class="w-full rounded-xl p-4 text-sm appearance-none" autocomplete="off">
-        </div>
+        <input type="text" id="reg-ig" placeholder="Usuario de Instagram (Ej: @maria)" class="w-full rounded-xl p-4 text-sm appearance-none" autocomplete="off">
         <select id="reg-mes" class="w-full rounded-xl p-4 text-sm text-[#8F8F8F] appearance-none cursor-pointer">
           <option value="" disabled selected>Mes de cumpleaños</option>
           <option value="Enero" class="text-[#1A1A1A]">Enero</option>
@@ -105,15 +118,15 @@
           <option value="Noviembre" class="text-[#1A1A1A]">Noviembre</option>
           <option value="Diciembre" class="text-[#1A1A1A]">Diciembre</option>
         </select>
-        <input type="email" id="reg-correo" placeholder="Correo electrónico" class="w-full rounded-xl p-4 text-sm appearance-none">
     </div>
 
     <button type="submit" id="btn-register" class="w-full bg-[#D9889A] text-white shadow-md py-4 rounded-full font-bold mt-6 transition active:scale-95">
-      Ingresar al Pasaporte
+      Ingresar
     </button>
   </form>
 </div>
 
+<!-- DASHBOARD ORIGINAL -->
 <div id="dashboard-view" class="hidden space-y-8 pt-6 pb-12">
   <div class="flex justify-between items-center">
     <div>
@@ -131,7 +144,7 @@
     </div>
 
     <div class="grid grid-cols-5 gap-3 relative z-10" id="stickers-grid">
-      <!-- Stickers inyectados por JS -->
+      <!-- Stickers -->
     </div>
 
     <div class="mt-6 bg-[#FFF5F7] rounded-xl p-4 flex justify-between items-center border border-[#d9bbb1] relative z-10 shadow-sm">
@@ -149,21 +162,19 @@
       <p class="text-[9px] text-[#B59C9E] tracking-wide uppercase">* Aplica solo para servicio Rubber o Pedicure.</p>
     </div>
   </div>
-  
-  <div class="text-center mt-4">
-      <button id="btn-activar-push" class="text-xs font-bold text-[#D9889A] underline hidden">Activar Alertas de Premios</button>
-  </div>
 </div>
 
-<div id="reviews-section" class="mt-2 transition-all duration-500">
-    <!-- Contenedor estético para Reseñas de Google -->
-    <div class="glass rounded-2xl p-5 border border-[#d9bbb1]/50 mt-6 text-center shadow-sm">
-        <div class="flex justify-center items-center space-x-1 text-[#D9889A] mb-2 text-xl">
-            <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-        </div>
-        <p class="text-sm font-medium text-[#1A1A1A]">"¡Excelente servicio y atención! Mis uñas quedaron preciosas."</p>
-        <p class="text-xs text-[#8A7175] mt-2">- Reseña destacada en Google</p>
-    </div>
+<!-- SECCIÓN CONDICIONAL DE GOOGLE REVIEWS -->
+<div id="reviews-section" class="hidden transition-all duration-500">
+    <a href="https://g.page/r/YOUR_GOOGLE_REVIEW_LINK/review" target="_blank" class="block">
+      <div class="glass rounded-2xl p-5 border border-[#d9bbb1]/50 mt-6 text-center shadow-sm hover:scale-[1.01] transition-transform">
+          <div class="flex justify-center items-center space-x-1 text-[#D9889A] mb-2 text-xl">
+              <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+          </div>
+          <p class="text-sm font-medium text-[#1A1A1A]">"¡Déjanos tu opinión en Google y ayúdanos a crecer!"</p>
+          <p class="text-xs text-[#8A7175] mt-2 font-bold uppercase tracking-wider text-[#D9889A]">★ Toca aquí para calificar estudio ★</p>
+      </div>
+    </a>
 </div>
 
 <div id="toast-nuevo-sticker" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 w-11/12 max-w-sm glass border border-[#E2A6B4]/50 rounded-2xl p-4 flex items-center space-x-4 transition-all duration-500 opacity-0 translate-y-10 z-50 pointer-events-none shadow-[0_10px_30px_rgba(226,166,180,0.15)]">
@@ -186,23 +197,16 @@
 </div>
 
 <script>
- // Leer tokens desde la URL al estilo PWA
  const urlParams = new URLSearchParams(window.location.search);
  window.tokenEscaneado = urlParams.get('token') || "";
- window.clientIdHeredado = urlParams.get('clientId') || "";
 
  function abrirInstagram() {
-    const urlInstagram = "https://ig.me/m/essence.studio_pe?text=Hola%20acabo%20de%20llenar%20mi%20pasaporte%20y%20quiero%20reclamar%20mi%20premio";
-    window.top.location.href = urlInstagram;
-    cerrarCelebracion();
- }
- function cerrarCelebracion() {
+    window.top.location.href = "https://ig.me/m/essence.studio_pe?text=Hola%20acabo%20de%20llenar%20mi%20pasaporte%20y%20quiero%20reclamar%20mi%20premio";
     const modal = document.getElementById('celebration-modal');
     modal.classList.add('opacity-0', 'pointer-events-none');
     setTimeout(() => modal.classList.add('hidden'), 500);
  }
 </script>
 <script src="app.js"></script>
-
 </body>
 </html>
