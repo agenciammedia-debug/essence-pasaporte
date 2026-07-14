@@ -102,7 +102,7 @@
     let token = new URLSearchParams(window.location.search).get('token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
     
-    // Leer caché local de la memoria RAM
+    // Leer caché local de la memoria
     let cachedName = localStorage.getItem('essence_local_nombre') || "";
     let cachedPoints = localStorage.getItem('essence_local_puntos') || 0;
 
@@ -111,9 +111,9 @@
       document.getElementById('native-onboarding').classList.remove('hidden');
       document.getElementById('native-onboarding').classList.add('flex');
     } else {
+      const loader = document.getElementById('fast-loader');
       if (isStandalone && currentClientId) { 
         token = ""; 
-        // ¡MAGIA! Si hay caché, dibuja la pantalla sin esperar a Google
         if (cachedName) {
            document.getElementById('instant-name').innerText = cachedName;
            document.getElementById('instant-points').innerText = cachedPoints;
@@ -121,13 +121,16 @@
            const dash = document.getElementById('instant-dashboard');
            dash.classList.remove('hidden');
            dash.classList.add('flex');
+           dash.style.pointerEvents = 'auto'; // Permitir toques en el clon
         } else {
-           document.getElementById('fast-loader').classList.remove('hidden');
+           loader.classList.remove('hidden');
+           loader.style.pointerEvents = 'auto'; // Bloquear toques accidentales en carga
         }
       } else {
-        document.getElementById('fast-loader').classList.remove('hidden');
+        loader.classList.remove('hidden');
+        loader.style.pointerEvents = 'auto';
       }
-      loadIframe(token); // Carga Google en silencio de fondo
+      loadIframe(token); 
     }
 
     function dibujarGridInstantaneo(puntos) {
@@ -156,7 +159,15 @@
       let finalUrl = scriptUrl + "?t=" + new Date().getTime(); 
       if (qrToken) finalUrl += "&token=" + qrToken;
       if (currentClientId) finalUrl += "&client_id=" + currentClientId;
-      document.getElementById('app-frame').src = finalUrl;
+      
+      const iframe = document.getElementById('app-frame');
+      iframe.onload = function() {
+        const loader = document.getElementById('fast-loader');
+        loader.style.opacity = '0';
+        loader.style.pointerEvents = 'none'; // <-- EXTREMADAMENTE CRUCIAL: Traspasar clics al formulario
+        setTimeout(() => loader.style.display = 'none', 400);
+      };
+      iframe.src = finalUrl;
     }
 
     let html5QrcodeScanner = null;
@@ -178,23 +189,24 @@
         document.body.removeChild(linkExterna);
       }
       
-      // NUEVO: Capturar datos de Google para el Dashboard Fantasma
       if (event.data && event.data.type === 'CACHE_DASHBOARD') {
         localStorage.setItem('essence_local_nombre', event.data.nombre);
         localStorage.setItem('essence_local_puntos', event.data.puntos);
       }
       
-      // NUEVO: Ocultar Fantasmas cuando Google esté listo
+      // OCULTAR CARGADORES Y PERMITIR CLICS
       if (event.data && event.data.type === 'APP_READY') {
         const dash = document.getElementById('instant-dashboard');
         if (dash && !dash.classList.contains('hidden')) {
            dash.style.opacity = '0';
+           dash.style.pointerEvents = 'none'; // <-- Libera clics del dashboard fantasma
            setTimeout(() => { dash.classList.remove('flex'); dash.classList.add('hidden'); }, 500);
         }
         const loader = document.getElementById('fast-loader');
         if (loader && !loader.classList.contains('hidden')) {
            loader.style.opacity = '0';
-           setTimeout(() => { loader.classList.add('hidden'); }, 400);
+           loader.style.pointerEvents = 'none'; // <-- Libera clics del loader rápido
+           setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 400);
         }
       }
     });
@@ -209,9 +221,11 @@
           const url = new URL(decodedText);
           const scannedToken = url.searchParams.get("token");
           if (scannedToken) {
-            document.getElementById('fast-loader').classList.remove('hidden');
-            document.getElementById('fast-loader').style.display = 'flex';
-            document.getElementById('fast-loader').style.opacity = '1';
+            const loader = document.getElementById('fast-loader');
+            loader.classList.remove('hidden');
+            loader.style.display = 'flex';
+            loader.style.opacity = '1';
+            loader.style.pointerEvents = 'auto'; // Bloquea la pantalla durante la transacción
             loadIframe(scannedToken);
             cerrarEscanerNativo();
           } else { alert("El código QR no es válido."); }
