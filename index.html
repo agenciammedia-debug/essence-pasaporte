@@ -25,6 +25,20 @@
       }
     }
   </script>
+
+<!-- INTEGRACIÓN ONESIGNAL -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "d75cd80b-3d2e-44c6-aa3d-1ba5350d62ea", // Solo necesitas tu App ID
+        notifyButton: { enable: false },
+      });
+    });
+  </script>
+
+  
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
@@ -187,6 +201,12 @@
       if (event.data && event.data.type === 'SAVE_ID') {
         currentClientId = event.data.id; 
         localStorage.setItem('essence_client_id', currentClientId);
+        
+        // VINCULAR CLIENTA CON ONESIGNAL Y PEDIR PERMISO PUSH
+        OneSignalDeferred.push(function(OneSignal) {
+          OneSignal.login(currentClientId); // Registramos su ID interno
+          OneSignal.Notifications.requestPermission(); // Le pide permiso de notificaciones
+        });
       }
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
@@ -219,8 +239,16 @@
            loader.style.pointerEvents = 'none'; // <-- Libera clics del loader rápido
            setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 400);
         }
+      if (currentClientId) {
+          OneSignalDeferred.push(function(OneSignal) {
+            OneSignal.login(currentClientId);
+            // Pedimos permiso silenciosamente por si en el pasado le dio a "Cerrar"
+            if (OneSignal.Notifications.permission !== "granted") {
+              OneSignal.Notifications.requestPermission();
+            }
+          });
+        }
       }
-    });
 
     function abrirEscanerNativo() {
       document.getElementById('scanner-modal').style.display = 'flex';
