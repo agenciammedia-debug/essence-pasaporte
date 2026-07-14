@@ -202,9 +202,10 @@
         currentClientId = event.data.id; 
         localStorage.setItem('essence_client_id', currentClientId);
         
-        // Solo registramos a la clienta internamente (sin molestarla)
+        // VINCULACIÓN CRÍTICA
         OneSignalDeferred.push(function(OneSignal) {
           OneSignal.login(currentClientId); 
+          console.log("OneSignal logueado con ID: " + currentClientId);
         });
       }
 
