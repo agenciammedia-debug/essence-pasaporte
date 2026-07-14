@@ -14,6 +14,17 @@
   <link rel="apple-touch-icon" href="icon.png">
   
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
@@ -26,20 +37,10 @@
     .spinner { width: 40px; height: 40px; border: 4px solid rgba(217, 136, 154, 0.2); border-top-color: #D9889A; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-          }
-        }
-      }
-    }
-  </script>
 </head>
 <body>
 
+  <!-- PANTALLA DE BIENVENIDA NATIVA EN GITHUB -->
   <div id="native-onboarding" class="hidden fixed inset-0 z-[99999] bg-[#F9EFEE] flex-col items-center justify-center px-6 pt-10 pb-12 space-y-8 overflow-y-auto">
     <div class="text-center">
       <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" alt="Essence Logo" class="h-24 w-auto mx-auto mb-4 object-contain">
@@ -51,59 +52,13 @@
       <p class="text-xs text-[#8A7175] font-bold uppercase tracking-widest">¿Cómo instalar tu App?</p>
       <div class="space-y-2">
         <button class="w-full bg-white border border-[#D9889A] text-[#D9889A] py-4 rounded-full font-bold shadow-sm transition flex items-center justify-center space-x-2">
-          <span></span> <span>Instalar en iPhone</span>
+          <span></span> <span>Instalar en iPhone</span>
         </button>
       </div>
       <div class="space-y-2">
         <button id="btn-android-install" onclick="instalarAndroid()" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition">
           Instalar en Android
         </button>
-      </div>
-    </div>
-  </div>
-
-  <div id="native-register" class="hidden fixed inset-0 z-[99996] bg-[#F9EFEE] flex-col items-center justify-center px-6 py-8 overflow-y-auto font-sans">
-    <div class="w-full max-w-md space-y-6">
-      <div class="text-center">
-        <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" alt="Essence Logo" class="h-20 w-auto mx-auto mb-3 object-contain">
-        <h1 class="text-2xl font-light text-[#8A7175]">Crea tu <span class="font-bold text-[#d9bbb1]">Pasaporte</span></h1>
-        <p class="text-xs text-[#B59C9E] mt-1 font-medium">Completa tus datos para empezar a ganar beneficios.</p>
-      </div>
-
-      <div class="glass p-6 rounded-3xl border border-[#d9bbb1]/50 shadow-lg">
-        <form id="native-register-form" onsubmit="enviarRegistroNativo(event)" class="space-y-4">
-          <div>
-            <input type="text" id="nat-nombre" placeholder="Nombre completo" required class="w-full rounded-xl p-4 text-sm bg-white border border-[#d9bbb1] text-[#8A7175] placeholder-[#B59C9E] focus:outline-none focus:ring-2 focus:ring-[#D9889A] transition-all">
-          </div>
-          <div>
-            <input type="tel" id="nat-telefono" placeholder="Teléfono" required class="w-full rounded-xl p-4 text-sm bg-white border border-[#d9bbb1] text-[#8A7175] placeholder-[#B59C9E] focus:outline-none focus:ring-2 focus:ring-[#D9889A] transition-all">
-          </div>
-          <div class="relative">
-            <input type="text" id="nat-ig" oninput="filtrarInstagramNativo()" placeholder="Instagram (ej: @maria)" required class="w-full rounded-xl p-4 text-sm bg-white border border-[#d9bbb1] text-[#8A7175] placeholder-[#B59C9E] focus:outline-none focus:ring-2 focus:ring-[#D9889A] transition-all">
-            <ul id="nat-ig-suggestions" class="absolute left-0 right-0 top-full mt-1 bg-white border border-[#d9bbb1]/40 rounded-xl max-h-40 overflow-y-auto hidden z-50 shadow-lg divide-y divide-[#d9bbb1]/10"></ul>
-          </div>
-          <div class="relative">
-            <select id="nat-mes" required class="w-full rounded-xl p-4 text-sm bg-white border border-[#d9bbb1] text-[#8A7175] focus:outline-none focus:ring-2 focus:ring-[#D9889A] appearance-none" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%238A7175%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>'); background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;">
-              <option value="" disabled selected>Mes de tu cumpleaños</option>
-              <option value="Enero">Enero</option>
-              <option value="Febrero">Febrero</option>
-              <option value="Marzo">Marzo</option>
-              <option value="Abril">Abril</option>
-              <option value="Mayo">Mayo</option>
-              <option value="Junio">Junio</option>
-              <option value="Julio">Julio</option>
-              <option value="Agosto">Agosto</option>
-              <option value="Septiembre">Septiembre</option>
-              <option value="Octubre">Octubre</option>
-              <option value="Noviembre">Noviembre</option>
-              <option value="Diciembre">Diciembre</option>
-            </select>
-          </div>
-          
-          <button type="submit" id="btn-nat-register" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition-all text-sm mt-2">
-            Crear Pasaporte
-          </button>
-        </form>
       </div>
     </div>
   </div>
@@ -136,7 +91,7 @@
 
   <div id="fast-loader" class="hidden">
     <div class="spinner"></div>
-    <p style="margin-top: 16px; color: #8A7175; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-align: center; font-family: -apple-system, sans-serif;">CARGANDO</p>
+    <p style="margin-top: 16px; color: #8A7175; font-size: 12px; font-weight: 700; letter-spacing: 2px;">CARGANDO</p>
   </div>
 
   <div id="scanner-modal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); font-family:-apple-system,sans-serif; flex-direction:column; align-items:center; justify-content:center; padding:24px;">
@@ -152,33 +107,21 @@
   </div>
 
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbx3pHZYTuziT4JSI9EGXcdSEbek7TL3-iA-YTuAxUJUnhJ-6xnYbmpG4PFEYlGZt-zN/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbxhfdxRQQOXmnd-e3Ern6j1QeXMGZ-ABJ7VnCjGRSuWICEOsj0TWTmHQbhjha2inAvd/exec";
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     
     let token = new URLSearchParams(window.location.search).get('token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
     
-    // Almacenamiento de variables de comunicación
-    let iframeLoaded = false;
-    let pendingRegistrationData = null;
-    let globalIgList = [];
-
-    // Caché del Pasaporte
+    // Leer caché local de la memoria
     let cachedName = localStorage.getItem('essence_local_nombre') || "";
     let cachedPoints = localStorage.getItem('essence_local_puntos') || 0;
 
-    // CONTROL DE FLUJO INTELIGENTE DE VELOCIDAD EXTREMA
+    // CONTROL DE FLUJO INTELIGENTE DE 0 SEGUNDOS
     if (!isStandalone && !currentClientId) {
-      // 1. Safari normal -> Guía estética de instalación
       document.getElementById('native-onboarding').classList.remove('hidden');
       document.getElementById('native-onboarding').classList.add('flex');
-    } else if (isStandalone && !currentClientId) {
-      // 2. App descargada por 1ra vez -> Formulario de Registro Nativo INSTANTÁNEO (0.0 seg)
-      document.getElementById('native-register').classList.remove('hidden');
-      document.getElementById('native-register').classList.add('flex');
-      loadIframe(token); // Carga Google en silencio de fondo para despertar el servidor
     } else {
-      // 3. Clienta ya registrada -> Dashboard instantáneo
       const loader = document.getElementById('fast-loader');
       if (isStandalone && currentClientId) { 
         token = ""; 
@@ -189,10 +132,10 @@
            const dash = document.getElementById('instant-dashboard');
            dash.classList.remove('hidden');
            dash.classList.add('flex');
-           dash.style.pointerEvents = 'auto';
+           dash.style.pointerEvents = 'auto'; // Permitir toques en el clon
         } else {
            loader.classList.remove('hidden');
-           loader.style.pointerEvents = 'auto';
+           loader.style.pointerEvents = 'auto'; // Bloquear toques accidentales en carga
         }
       } else {
         loader.classList.remove('hidden');
@@ -232,118 +175,15 @@
       iframe.onload = function() {
         const loader = document.getElementById('fast-loader');
         loader.style.opacity = '0';
-        loader.style.pointerEvents = 'none';
+        loader.style.pointerEvents = 'none'; // <-- EXTREMADAMENTE CRUCIAL: Traspasar clics al formulario
         setTimeout(() => loader.style.display = 'none', 400);
       };
       iframe.src = finalUrl;
     }
 
-    // GESTOR DE ENVÍO DE REGISTRO NATIVO ASÍNCRONO
-    function enviarRegistroNativo(event) {
-      event.preventDefault();
-      
-      const btn = document.getElementById('btn-nat-register');
-      btn.innerText = "Creando Pasaporte...";
-      btn.disabled = true;
-
-      // Mostrar cargador nativo rápido
-      const loader = document.getElementById('fast-loader');
-      loader.querySelector('p').innerText = "CREANDO TU PASAPORTE...";
-      loader.classList.remove('hidden');
-      loader.style.display = 'flex';
-      loader.style.opacity = '1';
-      loader.style.pointerEvents = 'auto';
-
-      const data = {
-        nombre: document.getElementById('nat-nombre').value,
-        telefono: document.getElementById('nat-telefono').value,
-        instagram: document.getElementById('nat-ig').value,
-        cumple: document.getElementById('nat-mes').value
-      };
-
-      if (iframeLoaded) {
-        // Si el servidor de Google ya despertó, le inyectamos los datos inmediatamente
-        document.getElementById('app-frame').contentWindow.postMessage({ 
-          type: 'SUBMIT_REGISTRATION', 
-          data: data 
-        }, '*');
-      } else {
-        // Si el servidor sigue cargando, guardamos los datos para enviarlos en el milisegundo en que despierte
-        pendingRegistrationData = data;
-      }
-    }
-
-    // Filtrador de sugerencias de Instagram Nativo
-    function filtrarInstagramNativo() {
-      const inputField = document.getElementById('nat-ig');
-      const texto = inputField.value.toLowerCase().replace('@', '');
-      const sugerenciasBox = document.getElementById('nat-ig-suggestions');
-      sugerenciasBox.innerHTML = '';
-      
-      if (texto.length < 2 || !globalIgList || globalIgList.length === 0) { 
-        sugerenciasBox.classList.add('hidden'); 
-        return; 
-      }
-      
-      const filtrados = globalIgList.filter(ig => String(ig).toLowerCase().includes(texto)).slice(0, 4);
-      if (filtrados.length === 0) { 
-        sugerenciasBox.classList.add('hidden'); 
-        return; 
-      }
-      
-      filtrados.forEach(ig => {
-        const li = document.createElement('li');
-        li.className = 'p-4 text-sm text-[#8A7175] cursor-pointer hover:bg-[#FFF5F7] transition-colors';
-        li.innerText = '@' + ig.replace('@', '');
-        li.onclick = () => { 
-          inputField.value = li.innerText; 
-          sugerenciasBox.classList.add('hidden'); 
-        };
-        sugerenciasBox.appendChild(li);
-      });
-      sugerenciasBox.classList.remove('hidden');
-    }
-
     let html5QrcodeScanner = null;
 
-    // CANAL DE COMUNICACIÓN BIDIRECCIONAL GITHUB <--> GOOGLE
     window.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'IFRAME_LOADED') {
-        iframeLoaded = true;
-        // Si el usuario ya envió sus datos y estábamos esperando al servidor, los mandamos ahora
-        if (pendingRegistrationData) {
-          document.getElementById('app-frame').contentWindow.postMessage({ 
-            type: 'SUBMIT_REGISTRATION', 
-            data: pendingRegistrationData 
-          }, '*');
-          pendingRegistrationData = null;
-        }
-      }
-      if (event.data && event.data.type === 'IG_LIST_READY') {
-        globalIgList = event.data.lista;
-      }
-      if (event.data && event.data.type === 'REGISTRATION_SUCCESS') {
-        // Ocultar formulario de registro e inicializar la visualización de la App
-        const regForm = document.getElementById('native-register');
-        if (regForm) {
-          regForm.classList.add('hidden');
-          regForm.classList.remove('flex');
-        }
-        const loader = document.getElementById('fast-loader');
-        loader.style.opacity = '0';
-        loader.style.pointerEvents = 'none';
-        setTimeout(() => loader.style.display = 'none', 400);
-      }
-      if (event.data && event.data.type === 'REGISTRATION_ERROR') {
-        alert("❌ Error: " + event.data.error);
-        const btn = document.getElementById('btn-nat-register');
-        btn.innerText = "Crear Pasaporte";
-        btn.disabled = false;
-        const loader = document.getElementById('fast-loader');
-        loader.style.opacity = '0';
-        loader.style.pointerEvents = 'none';
-        setTimeout(() => loader.style.display = 'none', 400);
-      }
       if (event.data && event.data.type === 'SAVE_ID') {
         currentClientId = event.data.id; 
         localStorage.setItem('essence_client_id', currentClientId);
@@ -359,23 +199,24 @@
         linkExterna.click();
         document.body.removeChild(linkExterna);
       }
+      
       if (event.data && event.data.type === 'CACHE_DASHBOARD') {
         localStorage.setItem('essence_local_nombre', event.data.nombre);
         localStorage.setItem('essence_local_puntos', event.data.puntos);
       }
       
-      // OCULTAR CARGADORES Y PERMITIR CLICS AL COMPLETAR CARGA REAL
+      // OCULTAR CARGADORES Y PERMITIR CLICS
       if (event.data && event.data.type === 'APP_READY') {
         const dash = document.getElementById('instant-dashboard');
         if (dash && !dash.classList.contains('hidden')) {
            dash.style.opacity = '0';
-           dash.style.pointerEvents = 'none';
+           dash.style.pointerEvents = 'none'; // <-- Libera clics del dashboard fantasma
            setTimeout(() => { dash.classList.remove('flex'); dash.classList.add('hidden'); }, 500);
         }
         const loader = document.getElementById('fast-loader');
         if (loader && !loader.classList.contains('hidden')) {
            loader.style.opacity = '0';
-           loader.style.pointerEvents = 'none';
+           loader.style.pointerEvents = 'none'; // <-- Libera clics del loader rápido
            setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 400);
         }
       }
@@ -395,7 +236,7 @@
             loader.classList.remove('hidden');
             loader.style.display = 'flex';
             loader.style.opacity = '1';
-            loader.style.pointerEvents = 'auto'; 
+            loader.style.pointerEvents = 'auto'; // Bloquea la pantalla durante la transacción
             loadIframe(scannedToken);
             cerrarEscanerNativo();
           } else { alert("El código QR no es válido."); }
