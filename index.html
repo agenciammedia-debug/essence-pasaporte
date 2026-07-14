@@ -47,7 +47,7 @@
       </div>
 
       <div class="space-y-2">
-  <button id="btn-android-install" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition">
+  <button id="btn-android-install" onclick="instalarAndroid()" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition">
     Instalar en Android
   </button>
 </div>
@@ -153,40 +153,34 @@
     }
 
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => {}); }); }
-  </script>
-
-// ========================================================
-    // OPTIMIZACIÓN EXCLUSIVA PARA ANDROID (Instalación Premium)
+  // ========================================================
+    // OPTIMIZACIÓN EXCLUSIVA PARA ANDROID (Instalación Nativa)
     // ========================================================
     let deferredPrompt;
-    const btnAndroidInstall = document.getElementById('btn-android-install');
 
-    // Escucha si el sistema Android está listo para instalar la App nativamente
     window.addEventListener('beforeinstallprompt', (e) => {
-      // Evita que Android muestre el banner genérico del navegador
       e.preventDefault();
-      // Guarda el evento para activarlo con nuestro botón premium
       deferredPrompt = e;
-      
-      // Cambia el texto para avisarle a la clienta que está listo
-      if (btnAndroidInstall) {
-        btnAndroidInstall.innerText = "Instalar Pasaporte Essence";
+      const btnAndroid = document.getElementById('btn-android-install');
+      if (btnAndroid) {
+        btnAndroid.innerText = "Instalar Pasaporte Essence";
       }
     });
 
-    if (btnAndroidInstall) {
-      btnAndroidInstall.addEventListener('click', async () => {
-        if (deferredPrompt) {
-          // Si está en Chrome, lanza la ventana oficial nativa de Google
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          deferredPrompt = null;
-        } else {
-          // ANTI-ERROR DE INSTAGRAM/WHATSAPP: Evita que crashee el navegador interno
-          alert("✨ Para instalar tu Pasaporte en Android:\n\n1. Toca los 3 puntos de la esquina superior derecha.\n2. Selecciona 'Abrir en Chrome' o 'Abrir en el navegador'.\n3. Presiona el botón de instalar.");
-        }
-      });
+    async function instalarAndroid() {
+      if (deferredPrompt) {
+        // Lanza la ventana oficial de instalación de Android
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      } else {
+        // RESPALDO SEGURO: Si está en Instagram/WhatsApp o si el navegador lo bloquea
+        alert("✨ Para instalar tu Pasaporte:\n\n1. Asegúrate de estar en el navegador Google Chrome.\n2. Toca los 3 puntos (⋮) arriba a la derecha.\n3. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.");
+      }
     }
+  </script>
+
+
   
 </body>
 </html>
