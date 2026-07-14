@@ -202,15 +202,23 @@
         currentClientId = event.data.id; 
         localStorage.setItem('essence_client_id', currentClientId);
         
-        // VINCULAR CLIENTA CON ONESIGNAL Y PEDIR PERMISO PUSH
+        // Solo registramos a la clienta internamente (sin molestarla)
         OneSignalDeferred.push(function(OneSignal) {
-          OneSignal.login(currentClientId); // Registramos su ID interno
-          OneSignal.Notifications.requestPermission(); // Le pide permiso de notificaciones
+          OneSignal.login(currentClientId); 
         });
       }
+
+      // NUEVA REGLA: Pide el permiso al instante usando la fuerza del clic en "Crear Pasaporte"
+      if (event.data && event.data.type === 'ASK_PUSH') {
+        OneSignalDeferred.push(function(OneSignal) {
+          OneSignal.Notifications.requestPermission(); 
+        });
+      }
+
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
       }
+      
       if (event.data && event.data.type === 'OPEN_REVIEW') {
         const linkExterna = document.createElement('a');
         linkExterna.href = event.data.url;
@@ -225,33 +233,29 @@
         localStorage.setItem('essence_local_puntos', event.data.puntos);
       }
       
-     // OCULTAR CARGADORES Y PERMITIR CLICS
+      // OCULTAR CARGADORES Y PERMITIR CLICS
       if (event.data && event.data.type === 'APP_READY') {
         const dash = document.getElementById('instant-dashboard');
         if (dash && !dash.classList.contains('hidden')) {
            dash.style.opacity = '0';
-           dash.style.pointerEvents = 'none'; // <-- Libera clics del dashboard fantasma
+           dash.style.pointerEvents = 'none'; 
            setTimeout(() => { dash.classList.remove('flex'); dash.classList.add('hidden'); }, 500);
         }
         const loader = document.getElementById('fast-loader');
         if (loader && !loader.classList.contains('hidden')) {
            loader.style.opacity = '0';
-           loader.style.pointerEvents = 'none'; // <-- Libera clics del loader rápido
+           loader.style.pointerEvents = 'none'; 
            setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 400);
         }
         
-        // VINCULAR CLIENTA EXISTENTE SI ENTRA A LA APP
+        // Mantener logueada a la clienta sin lanzar avisos bloqueados
         if (currentClientId) {
           OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(currentClientId);
-            // Pedimos permiso silenciosamente por si en el pasado le dio a "Cerrar"
-            if (OneSignal.Notifications.permission !== "granted") {
-              OneSignal.Notifications.requestPermission();
-            }
           });
         }
       }
-    }); 
+    });
     
     function abrirEscanerNativo() {
       document.getElementById('scanner-modal').style.display = 'flex';
