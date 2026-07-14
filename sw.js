@@ -5,19 +5,19 @@ const urlsToCache = [
   '/essence-pasaporte/manifest.json'
 ];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
+// Usamos un Service Worker vacío pero activo.
+// Esto permite que Android detecte la PWA como "instalable" 
+// sin el riesgo de bloquear archivos con caché vieja.
+
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Devuelve la caché si existe, si no, busca en la red
-        return response || fetch(event.request);
-      })
-  );
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
+
+// Esta estrategia garantiza que la app siempre busque la versión más nueva en Google
+self.addEventListener('fetch', (event) => {
+  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
