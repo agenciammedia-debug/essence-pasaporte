@@ -113,6 +113,15 @@
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
       }
+      // NUEVA REGLA: GitHub recibe la orden y abre la reseña con todos los permisos del iPhone
+      if (event.data && event.data.type === 'OPEN_REVIEW') {
+        const linkExterna = document.createElement('a');
+        linkExterna.href = event.data.url;
+        linkExterna.target = '_blank';
+        document.body.appendChild(linkExterna);
+        linkExterna.click();
+        document.body.removeChild(linkExterna);
+      }
     });
 
     function abrirEscanerNativo() {
