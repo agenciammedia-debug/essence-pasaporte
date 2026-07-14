@@ -29,7 +29,7 @@
 </head>
 <body>
 
-  <!-- PANTALLA DE BIENVENIDA NATIVA EN GITHUB (CARGA EN 0 SEGUNDOS) -->
+  <!-- PANTALLA DE BIENVENIDA NATIVA EN GITHUB -->
   <div id="native-onboarding" class="hidden fixed inset-0 z-[99999] bg-[#F9EFEE] flex-col items-center justify-center px-6 pt-10 pb-12 space-y-8 overflow-y-auto">
     <div class="text-center">
       <img src="https://dl.dropboxusercontent.com/scl/fi/ha7wwru7cqucy5ge1lr1m/logo-essence-ico.png?rlkey=3v7wmqgh455hbmkx89dl6cwlm" alt="Essence Logo" class="h-24 w-auto mx-auto mb-4 object-contain">
@@ -39,18 +39,42 @@
 
     <div class="glass p-6 rounded-3xl w-full max-w-md text-center border border-[#d9bbb1]/50 shadow-lg space-y-6">
       <p class="text-xs text-[#8A7175] font-bold uppercase tracking-widest">¿Cómo instalar tu App?</p>
-      
       <div class="space-y-2">
         <button class="w-full bg-white border border-[#D9889A] text-[#D9889A] py-4 rounded-full font-bold shadow-sm transition flex items-center justify-center space-x-2">
-          <span></span> <span>Instalar en iPhone</span>
+          <span></span> <span>Instalar en iPhone</span>
         </button>
       </div>
-
       <div class="space-y-2">
-  <button id="btn-android-install" onclick="instalarAndroid()" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition">
-    Instalar en Android
-  </button>
-</div>
+        <button id="btn-android-install" onclick="instalarAndroid()" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition">
+          Instalar en Android
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NUEVO: DASHBOARD FANTASMA (Carga en 0.00 segundos) -->
+  <div id="instant-dashboard" class="hidden fixed inset-0 z-[99997] bg-[#F9EFEE] flex-col items-center pt-10 px-6 transition-opacity duration-500">
+    <div class="w-full flex justify-between items-center mb-6">
+      <div>
+        <h2 class="text-3xl font-light text-[#8A7175]">Hola, <span id="instant-name" class="font-bold text-[#d9bbb1]"></span></h2>
+        <p class="text-xs text-[#B59C9E] font-medium tracking-wide uppercase mt-1">Tu Pasaporte</p>
+      </div>
+      <button onclick="abrirEscanerNativo()" class="h-12 w-12 rounded-full bg-[#FFF5F7] border border-[#D9889A] flex items-center justify-center shadow-sm active:scale-95 transition-all group">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="#D9889A" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+      </button>
+    </div>
+    <div class="glass w-full rounded-3xl p-6 border border-[#d9bbb1]/50 shadow-lg relative overflow-hidden">
+      <div class="flex justify-between items-end mb-6">
+        <h3 class="text-[#8A7175] text-sm font-bold uppercase tracking-widest">Tus Sellos</h3>
+        <p class="text-3xl font-serif text-[#D9889A] leading-none"><span id="instant-points"></span><span class="text-lg text-[#B59C9E]">/10</span></p>
+      </div>
+      <div id="instant-grid" class="grid grid-cols-5 gap-3 mb-4"></div>
+      
+      <!-- Indicador de sincronización en segundo plano -->
+      <div class="flex flex-col justify-center items-center mt-6 opacity-60">
+         <div class="spinner" style="width:20px; height:20px; border-width:2px;"></div>
+         <p class="text-[10px] text-[#B59C9E] mt-2 uppercase tracking-widest">Sincronizando con Essence...</p>
+      </div>
     </div>
   </div>
 
@@ -72,35 +96,67 @@
   </div>
 
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbxcu-jwDCPExLnLoW54w_T7H8cEzw9qsKY5VyHo4krGfJJoQO1cmOWPuzDu9owX1qE/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbxhfdxRQQOXmnd-e3Ern6j1QeXMGZ-ABJ7VnCjGRSuWICEOsj0TWTmHQbhjha2inAvd/exec";
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     
     let token = new URLSearchParams(window.location.search).get('token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
+    
+    // Leer caché local de la memoria RAM
+    let cachedName = localStorage.getItem('essence_local_nombre') || "";
+    let cachedPoints = localStorage.getItem('essence_local_puntos') || 0;
 
-    // CONTROL DE FLUJO INTELIGENTE
+    // CONTROL DE FLUJO INTELIGENTE DE 0 SEGUNDOS
     if (!isStandalone && !currentClientId) {
-      // 1. ES CLIENTA NUEVA EN SAFARI: Muestra el Onboarding nativo al instante. No carga Google aún.
       document.getElementById('native-onboarding').classList.remove('hidden');
       document.getElementById('native-onboarding').classList.add('flex');
     } else {
-      // 2. YA TIENE LA APP INSTALADA O YA TIENE ID: Carga el sistema de Google normalmente.
-      if (isStandalone && currentClientId) { token = ""; }
-      document.getElementById('fast-loader').classList.remove('hidden');
-      loadIframe(token);
+      if (isStandalone && currentClientId) { 
+        token = ""; 
+        // ¡MAGIA! Si hay caché, dibuja la pantalla sin esperar a Google
+        if (cachedName) {
+           document.getElementById('instant-name').innerText = cachedName;
+           document.getElementById('instant-points').innerText = cachedPoints;
+           dibujarGridInstantaneo(parseInt(cachedPoints));
+           const dash = document.getElementById('instant-dashboard');
+           dash.classList.remove('hidden');
+           dash.classList.add('flex');
+        } else {
+           document.getElementById('fast-loader').classList.remove('hidden');
+        }
+      } else {
+        document.getElementById('fast-loader').classList.remove('hidden');
+      }
+      loadIframe(token); // Carga Google en silencio de fondo
+    }
+
+    function dibujarGridInstantaneo(puntos) {
+      const grid = document.getElementById('instant-grid');
+      grid.innerHTML = '';
+      for (let i = 1; i <= 10; i++) {
+        const isFilled = i <= puntos;
+        const isMilestone = i === 5 || i === 10;
+        let content = isFilled ? '✓' : i;
+        if (i === 5) content = isFilled ? '✓' : '50%';
+        if (i === 10) content = isFilled ? '✓' : 'FREE';
+
+        let cssClasses = 'h-12 rounded-xl flex items-center justify-center transition-all relative ';
+        if (isFilled) cssClasses += 'bg-[#D9889A] text-white font-bold text-lg shadow-[0_4px_12px_rgba(217,136,154,0.4)] border border-[#D9889A]';
+        else if (isMilestone) {
+          cssClasses += 'bg-[#FFF5F7] border-2 border-[#D9889A] text-[#D9889A] font-bold text-xs shadow-sm ';
+          if ((i === 5 && puntos < 5) || (i === 10 && puntos >= 5 && puntos < 10)) cssClasses += 'bg-white';
+        }
+        else cssClasses += 'bg-white border border-[#d9bbb1] text-[#BDBDBD] text-xs shadow-sm';
+
+        grid.innerHTML += `<div class="${cssClasses}">${content}</div>`;
+      }
     }
 
     function loadIframe(qrToken) {
       let finalUrl = scriptUrl + "?t=" + new Date().getTime(); 
       if (qrToken) finalUrl += "&token=" + qrToken;
       if (currentClientId) finalUrl += "&client_id=" + currentClientId;
-      
-      const iframe = document.getElementById('app-frame');
-      iframe.onload = function() {
-        document.getElementById('fast-loader').style.opacity = '0';
-        setTimeout(() => document.getElementById('fast-loader').style.display = 'none', 400);
-      };
-      iframe.src = finalUrl;
+      document.getElementById('app-frame').src = finalUrl;
     }
 
     let html5QrcodeScanner = null;
@@ -113,7 +169,6 @@
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
       }
-      // NUEVA REGLA: GitHub recibe la orden y abre la reseña con todos los permisos del iPhone
       if (event.data && event.data.type === 'OPEN_REVIEW') {
         const linkExterna = document.createElement('a');
         linkExterna.href = event.data.url;
@@ -121,6 +176,26 @@
         document.body.appendChild(linkExterna);
         linkExterna.click();
         document.body.removeChild(linkExterna);
+      }
+      
+      // NUEVO: Capturar datos de Google para el Dashboard Fantasma
+      if (event.data && event.data.type === 'CACHE_DASHBOARD') {
+        localStorage.setItem('essence_local_nombre', event.data.nombre);
+        localStorage.setItem('essence_local_puntos', event.data.puntos);
+      }
+      
+      // NUEVO: Ocultar Fantasmas cuando Google esté listo
+      if (event.data && event.data.type === 'APP_READY') {
+        const dash = document.getElementById('instant-dashboard');
+        if (dash && !dash.classList.contains('hidden')) {
+           dash.style.opacity = '0';
+           setTimeout(() => { dash.classList.remove('flex'); dash.classList.add('hidden'); }, 500);
+        }
+        const loader = document.getElementById('fast-loader');
+        if (loader && !loader.classList.contains('hidden')) {
+           loader.style.opacity = '0';
+           setTimeout(() => { loader.classList.add('hidden'); }, 400);
+        }
       }
     });
 
@@ -153,34 +228,24 @@
     }
 
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => {}); }); }
-  // ========================================================
-    // OPTIMIZACIÓN EXCLUSIVA PARA ANDROID (Instalación Nativa)
-    // ========================================================
-    let deferredPrompt;
 
+    let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
       const btnAndroid = document.getElementById('btn-android-install');
-      if (btnAndroid) {
-        btnAndroid.innerText = "Instalar Pasaporte Essence";
-      }
+      if (btnAndroid) { btnAndroid.innerText = "Instalar Pasaporte Essence"; }
     });
 
     async function instalarAndroid() {
       if (deferredPrompt) {
-        // Lanza la ventana oficial de instalación de Android
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         deferredPrompt = null;
       } else {
-        // RESPALDO SEGURO: Si está en Instagram/WhatsApp o si el navegador lo bloquea
         alert("✨ Para instalar tu Pasaporte:\n\n1. Asegúrate de estar en el navegador Google Chrome.\n2. Toca los 3 puntos (⋮) arriba a la derecha.\n3. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.");
       }
     }
   </script>
-
-
-  
 </body>
 </html>
