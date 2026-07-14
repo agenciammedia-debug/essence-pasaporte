@@ -249,13 +249,30 @@
         }
         
         // Mantener logueada a la clienta sin lanzar avisos bloqueados
+        // Mantener logueada a la clienta y verificar permisos
         if (currentClientId) {
           OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(currentClientId);
+            
+            // Si aún no ha dado permiso (ni sí, ni no), mostramos nuestro hermoso banner nativo
+            if (OneSignal.Notifications.permission !== "granted" && OneSignal.Notifications.permission !== "denied") {
+               document.getElementById('push-banner').classList.remove('hidden');
+            }
           });
         }
-      }
+      } 
     });
+
+
+    function solicitarPermisoNativo() {
+      OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.Notifications.requestPermission().then((permission) => {
+          if (permission === true || permission === 'granted') {
+            document.getElementById('push-banner').style.display = 'none';
+          }
+        });
+      });
+    }
     
     function abrirEscanerNativo() {
       document.getElementById('scanner-modal').style.display = 'flex';
