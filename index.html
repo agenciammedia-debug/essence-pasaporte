@@ -225,7 +225,7 @@
         localStorage.setItem('essence_local_puntos', event.data.puntos);
       }
       
-      // OCULTAR CARGADORES Y PERMITIR CLICS
+     // OCULTAR CARGADORES Y PERMITIR CLICS
       if (event.data && event.data.type === 'APP_READY') {
         const dash = document.getElementById('instant-dashboard');
         if (dash && !dash.classList.contains('hidden')) {
@@ -239,7 +239,9 @@
            loader.style.pointerEvents = 'none'; // <-- Libera clics del loader rápido
            setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 400);
         }
-      if (currentClientId) {
+        
+        // VINCULAR CLIENTA EXISTENTE SI ENTRA A LA APP
+        if (currentClientId) {
           OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(currentClientId);
             // Pedimos permiso silenciosamente por si en el pasado le dio a "Cerrar"
@@ -249,7 +251,8 @@
           });
         }
       }
-
+    }); 
+    
     function abrirEscanerNativo() {
       document.getElementById('scanner-modal').style.display = 'flex';
       html5QrcodeScanner = new Html5Qrcode("reader");
