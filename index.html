@@ -265,12 +265,12 @@
 
 
     function solicitarPermisoNativo() {
+      // Ocultamos el modal al instante para que no estorbe al aviso nativo
+      document.getElementById('push-banner').style.display = 'none';
+      
       OneSignalDeferred.push(function(OneSignal) {
-        OneSignal.Notifications.requestPermission().then((permission) => {
-          if (permission === true || permission === 'granted') {
-            document.getElementById('push-banner').style.display = 'none';
-          }
-        });
+        // Al ejecutar esto directamente tras el clic, iOS no lo bloqueará
+        OneSignal.Notifications.requestPermission();
       });
     }
     
@@ -326,16 +326,16 @@
   </script>
 
 <!-- BANNER NATIVO DE PERMISOS PUSH (A prueba de bloqueos) -->
-  <div id="push-banner" class="hidden fixed bottom-8 left-1/2 transform -translate-x-1/2 w-11/12 max-w-sm z-[999999] glass rounded-2xl p-4 border border-[#d9bbb1]/80 shadow-2xl flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <div class="bg-[#FFF5F7] p-2 rounded-full border border-[#D9889A]/30 text-lg">🔔</div>
-      <div>
-        <h4 class="text-xs font-bold text-[#1A1A1A]">Activa tus alertas</h4>
-        <p class="text-[10px] text-[#8A7175]">Entérate al instante cuando ganes un sello.</p>
-      </div>
-    </div>
-    <button onclick="solicitarPermisoNativo()" class="bg-[#D9889A] text-white px-4 py-2 rounded-full text-xs font-bold shadow-md active:scale-95 transition-all">Permitir</button>
+<div id="push-banner" class="hidden fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+  <div class="glass w-full max-w-sm rounded-3xl p-8 text-center border border-white/50 shadow-2xl animate-in fade-in zoom-in duration-300">
+    <div class="text-5xl mb-4">🔔</div>
+    <h4 class="text-lg font-bold text-[#1A1A1A] mb-2">¿Quieres recibir tus sellos?</h4>
+    <p class="text-sm text-[#8A7175] mb-8">Te avisaremos al instante cuando ganes beneficios en Essence.</p>
+    <button onclick="solicitarPermisoNativo()" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-lg active:scale-95 transition-all">
+      Permitir Notificaciones
+    </button>
   </div>
+</div>
   
 </body>
 </html>
