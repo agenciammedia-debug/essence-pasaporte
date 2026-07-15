@@ -34,6 +34,8 @@
       await OneSignal.init({
         appId: "d75cd80b-3d2e-44c6-aa3d-1ba5350d62ea", 
         notifyButton: { enable: false },
+
+        welcomeNotification: { disable: true },
         
         // PILAR 2: ENRUTAMIENTO PARA GITHUB PAGES (SUBCARPETAS)
         serviceWorkerParam: { scope: "/essence-pasaporte/" },
