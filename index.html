@@ -225,75 +225,7 @@
   });
 }
 
-    // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
-    OneSignalDeferred.push(function(OneSignal) {
-      OneSignal.Notifications.addEventListener('click', function(event) {
-        const payloadData = event.notification.additionalData;
-        // Si la notificación trae el código de cumpleaños, abrimos la sorpresa
-        if (payloadData && payloadData.evento === "cumpleanos") {
-          abrirModalCumple();
-        }
-      });
-    });
-
-    // 2. FUNCIONES DE ANIMACIÓN Y UI
-    function abrirModalCumple() {
-      const modal = document.getElementById('birthday-modal');
-      const card = document.getElementById('birthday-card');
-      
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      
-      // Delay de 50ms para permitir el renderizado antes de transicionar (efecto Apple suave)
-      setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        card.classList.remove('scale-95');
-        card.classList.add('scale-100');
-        lanzarConfeti();
-      }, 50);
-    }
-
-    function cerrarModalCumple() {
-      const modal = document.getElementById('birthday-modal');
-      modal.classList.add('opacity-0');
-      setTimeout(() => {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-      }, 500);
-    }
-
-    function lanzarConfeti() {
-      var duration = 3 * 1000; // 3 segundos de lluvia de confeti
-      var animationEnd = Date.now() + duration;
-      // Colores de tu marca
-      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100000, colors: ['#D9889A', '#ffffff', '#8A7175', '#d9bbb1'] };
-
-      function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-
-      var interval = setInterval(function() {
-        var timeLeft = animationEnd - Date.now();
-        if (timeLeft <= 0) return clearInterval(interval);
-
-        var particleCount = 50 * (timeLeft / duration);
-        confetti(Object.assign({}, defaults, { particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-        }));
-        confetti(Object.assign({}, defaults, { particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-        }));
-      }, 250);
-    }
-
-    // DETECTOR DE REGALOS (A PRUEBA DE FALLOS)
-    (function comprobarRegaloCumple() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('evento') === 'cumpleanos') {
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setTimeout(() => {
-          abrirModalCumple();
-        }, 500);
-      }
-    })();
+   
 
 
       
@@ -417,26 +349,67 @@
       }
     }
 
-    // DETECTOR DE REGALOS (A PRUEBA DE FALLOS)
+   // ==========================================
+    // 🎁 MÓDULO DE CUMPLEAÑOS (GLOBAL)
+    // ==========================================
+    OneSignalDeferred.push(function(OneSignal) {
+      OneSignal.Notifications.addEventListener('click', function(event) {
+        const payloadData = event.notification.additionalData;
+        if (payloadData && payloadData.evento === "cumpleanos") {
+          abrirModalCumple();
+        }
+      });
+    });
+
+    function abrirModalCumple() {
+      const modal = document.getElementById('birthday-modal');
+      const card = document.getElementById('birthday-card');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        card.classList.remove('scale-95');
+        card.classList.add('scale-100');
+        lanzarConfeti();
+      }, 50);
+    }
+
+    function cerrarModalCumple() {
+      const modal = document.getElementById('birthday-modal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+      }, 500);
+    }
+
+    function lanzarConfeti() {
+      var duration = 3 * 1000; 
+      var animationEnd = Date.now() + duration;
+      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100000, colors: ['#D9889A', '#ffffff', '#8A7175', '#d9bbb1'] };
+
+      function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+      var interval = setInterval(function() {
+        var timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+
+        var particleCount = 50 * (timeLeft / duration);
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+      }, 250);
+    }
+
     (function comprobarRegaloCumple() {
       const urlParams = new URLSearchParams(window.location.search);
-      
-      // Si la URL tiene la llave maestra de cumpleaños
       if (urlParams.get('evento') === 'cumpleanos') {
-        
-        // Limpiamos la URL inmediatamente para que no vuelva a saltar si ella recarga la app
         window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Le damos medio segundo a la app para que cargue el diseño antes de lanzar el modal
-        setTimeout(() => {
-          abrirModalCumple();
-        }, 500);
+        setTimeout(() => { abrirModalCumple(); }, 500);
       }
     })();
     
   </script>
-
-
 
 
   <div id="birthday-modal" class="hidden fixed inset-0 z-[99999] flex-col items-center justify-center p-6 transition-opacity duration-500 opacity-0" style="background: rgba(249, 239, 238, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
