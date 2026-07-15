@@ -31,19 +31,18 @@
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
-  try {
-    await OneSignal.init({
-      appId: "d75cd80b-3d2e-44c6-aa3d-1ba5350d62ea",
-      notifyButton: { enable: false },
-      serviceWorkerParam: { scope: "/essence-pasaporte/" },
-      serviceWorkerPath: "/essence-pasaporte/service-worker.js"
+      await OneSignal.init({
+        appId: "d75cd80b-3d2e-44c6-aa3d-1ba5350d62ea", 
+        notifyButton: { enable: false },
+        
+        // PILAR 2: ENRUTAMIENTO PARA GITHUB PAGES (SUBCARPETAS)
+        serviceWorkerParam: { scope: "/essence-pasaporte/" },
+        serviceWorkerPath: "/essence-pasaporte/service-worker.js" // <--- CAMBIO AQUÍ
+      });
     });
-    console.log("OneSignal inicializado correctamente");
-  } catch (e) {
-    console.log("Error en OneSignal.init: " + e);
-  }
-});
   </script>
+
+
 
   
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
