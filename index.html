@@ -42,7 +42,7 @@
         
         // PILAR 2: ENRUTAMIENTO PARA GITHUB PAGES (SUBCARPETAS)
         serviceWorkerParam: { scope: "/essence-pasaporte/" },
-        serviceWorkerPath: "/essence-pasaporte/service-worker.js" // <--- CAMBIO AQUÍ
+        serviceWorkerPath: "/essence-pasaporte/OneSignalSDKWorker.js" // <--- CAMBIO AQUÍ
       });
     });
   </script>
@@ -64,6 +64,17 @@
   </style>
 </head>
 <body>
+
+  <!-- BANNER DE PERMISOS APPLE (Aparece solo si no hay permiso) -->
+  <div id="push-banner" class="hidden fixed top-4 left-4 right-4 z-[99999] glass rounded-2xl p-4 flex items-center justify-between shadow-lg border border-[#D9889A]">
+    <div class="flex-1">
+      <p class="text-sm font-bold text-[#8A7175]">Activar Notificaciones</p>
+      <p class="text-[10px] text-[#B59C9E] leading-tight mt-1">Para recibir tus regalos y avisos de sellos.</p>
+    </div>
+    <button onclick="solicitarPermisoNativo()" class="bg-[#D9889A] text-white text-xs font-bold px-5 py-2 rounded-full shadow-md active:scale-95 transition">
+      Activar
+    </button>
+  </div>
 
   <!-- PANTALLA DE BIENVENIDA NATIVA EN GITHUB -->
   <div id="native-onboarding" class="hidden fixed inset-0 z-[99999] bg-[#F9EFEE] flex-col items-center justify-center px-6 pt-10 pb-12 space-y-8 overflow-y-auto">
@@ -263,6 +274,14 @@
           OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(currentClientId);
             
+            // REGLA DE APPLE: Si no tiene permiso, mostramos el botón físico
+            if (OneSignal.Notifications.permission !== "granted") {
+                let pushBanner = document.getElementById('push-banner');
+                if (pushBanner) pushBanner.classList.remove('hidden');
+            }
+          });
+        }
+            
             // Si aún no ha dado permiso (ni sí, ni no), verificamos si existe el banner
             if (OneSignal.Notifications.permission !== "granted" && OneSignal.Notifications.permission !== "denied") {
                 let pushBanner = document.getElementById('push-banner');
@@ -282,14 +301,14 @@
     });
 
     function solicitarPermisoNativo() {
-      // Ocultamos el modal al instante
-      document.getElementById('push-banner').style.display = 'none';
+      // Ocultamos el banner
+      document.getElementById('push-banner').classList.add('hidden');
       
       OneSignalDeferred.push(function(OneSignal) {
-        // Aseguramos la vinculación del ID antes de pedir el permiso
         if (currentClientId) {
           OneSignal.login(currentClientId);
         }
+        // Este comando, al ser lanzado por un clic humano, es aprobado por Apple
         OneSignal.Notifications.requestPermission();
       });
     }
