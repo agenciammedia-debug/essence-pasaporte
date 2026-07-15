@@ -28,6 +28,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+
 <!-- INTEGRACIÓN ONESIGNAL -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
@@ -224,7 +225,7 @@
   });
 }
 
-      // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
+    // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
     OneSignalDeferred.push(function(OneSignal) {
       OneSignal.Notifications.addEventListener('click', function(event) {
         const payloadData = event.notification.additionalData;
@@ -415,9 +416,29 @@
         alert("✨ Para instalar tu Pasaporte:\n\n1. Asegúrate de estar en el navegador Google Chrome.\n2. Toca los 3 puntos (⋮) arriba a la derecha.\n3. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.");
       }
     }
+
+    // DETECTOR DE REGALOS (A PRUEBA DE FALLOS)
+    (function comprobarRegaloCumple() {
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      // Si la URL tiene la llave maestra de cumpleaños
+      if (urlParams.get('evento') === 'cumpleanos') {
+        
+        // Limpiamos la URL inmediatamente para que no vuelva a saltar si ella recarga la app
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Le damos medio segundo a la app para que cargue el diseño antes de lanzar el modal
+        setTimeout(() => {
+          abrirModalCumple();
+        }, 500);
+      }
+    })();
+    
   </script>
 
-<!-- MODAL CUMPLEAÑERO NATIVO -->
+
+
+
   <div id="birthday-modal" class="hidden fixed inset-0 z-[99999] flex-col items-center justify-center p-6 transition-opacity duration-500 opacity-0" style="background: rgba(249, 239, 238, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
     <div class="glass w-full max-w-sm rounded-3xl p-8 border border-[#d9bbb1]/50 shadow-2xl text-center transform scale-95 transition-transform duration-500" id="birthday-card">
       <div class="text-5xl mb-4">🎁</div>
@@ -428,14 +449,12 @@
         <p class="text-lg font-bold text-[#D9889A]">Lifting o Laminado<br>GRATIS</p>
       </div>
       
-      <!-- FIX DE DISEÑO: Salto de línea y énfasis en la última frase -->
-      <p class="text-sm text-[#8A7175] mb-8 font-medium leading-relaxed">
+       <p class="text-sm text-[#8A7175] mb-8 font-medium leading-relaxed">
         Revisa tu correo electrónico y preséntalo en Essence Studio para reclamar tu premio.
         <br><br>
         <span class="font-bold text-[#D9889A] text-base">¡Te queremos ver radiante!</span>
       </p>
       
-      <!-- BOTÓN DE CIERRE -->
       <button onclick="cerrarModalCumple()" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition">
         ¡Me encanta!
       </button>
