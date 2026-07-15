@@ -417,20 +417,25 @@
     }
   </script>
 
-<div id="birthday-modal" class="hidden fixed inset-0 z-[99999] flex-col items-center justify-center p-6 transition-opacity duration-500 opacity-0" style="background: rgba(249, 239, 238, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+<!-- MODAL CUMPLEAÑERO NATIVO -->
+  <div id="birthday-modal" class="hidden fixed inset-0 z-[99999] flex-col items-center justify-center p-6 transition-opacity duration-500 opacity-0" style="background: rgba(249, 239, 238, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
     <div class="glass w-full max-w-sm rounded-3xl p-8 border border-[#d9bbb1]/50 shadow-2xl text-center transform scale-95 transition-transform duration-500" id="birthday-card">
       <div class="text-5xl mb-4">🎁</div>
-      <h2 class="text-2xl font-bold text-[#8A7175] mb-2 leading-tight">¡Feliz mes <br>Cumpleañero!</h2>
+      <h2 class="text-2xl font-bold text-[#8A7175] mb-2 leading-tight">¡Feliz mes de tu<br>Cumpleaños!</h2>
       <p class="text-[10px] text-[#B59C9E] font-bold uppercase tracking-widest mb-6">Tu Regalo Essence</p>
       
       <div class="bg-[#FFF5F7] border border-[#D9889A] rounded-2xl p-4 mb-6">
         <p class="text-lg font-bold text-[#D9889A]">Lifting o Laminado<br>GRATIS</p>
       </div>
       
+      <!-- FIX DE DISEÑO: Salto de línea y énfasis en la última frase -->
       <p class="text-sm text-[#8A7175] mb-8 font-medium leading-relaxed">
-        Revisa tu correo y preséntalo en Essence Studio para reclamar tu regalito ¡Te queremos ver radiante!
+        Revisa tu correo electrónico y preséntalo en Essence Studio para reclamar tu premio.
+        <br><br>
+        <span class="font-bold text-[#D9889A] text-base">¡Te queremos ver radiante!</span>
       </p>
       
+      <!-- BOTÓN DE CIERRE -->
       <button onclick="cerrarModalCumple()" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition">
         ¡Me encanta!
       </button>
