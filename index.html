@@ -252,6 +252,13 @@
         localStorage.setItem('essence_local_nombre', event.data.nombre);
         localStorage.setItem('essence_local_puntos', event.data.puntos);
       }
+
+      if (event.data && event.data.type === 'CLEAR_CACHE') {
+        localStorage.removeItem('essence_client_id');
+        localStorage.removeItem('essence_local_nombre');
+        localStorage.removeItem('essence_local_puntos');
+        window.location.reload(); // Recarga la página como nueva
+      }
       
       // OCULTAR CARGADORES Y PERMITIR CLICS
       if (event.data && event.data.type === 'APP_READY') {
