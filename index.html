@@ -59,23 +59,7 @@
   </style>
 </head>
 <body>
-<div id="debug-console" style="position:fixed; bottom:0; left:0; right:0; height:150px; background:black; color:lime; font-size:10px; overflow-y:scroll; z-index:9999999; opacity:0.8; padding:10px; font-family:monospace;">
-  <div>CONSOLA DE DIAGNÓSTICO:</div>
-</div>
 
-<script>
-  // Esta función intercepta los errores y los muestra en pantalla
-  window.onerror = function(msg, url, line) {
-    const div = document.createElement('div');
-    div.innerText = "ERROR: " + msg + " (Línea " + line + ")";
-    document.getElementById('debug-console').appendChild(div);
-  };
-  console.log = function(msg) {
-    const div = document.createElement('div');
-    div.innerText = "> " + msg;
-    document.getElementById('debug-console').appendChild(div);
-  };
-</script>
   <!-- PANTALLA DE BIENVENIDA NATIVA EN GITHUB -->
   <div id="native-onboarding" class="hidden fixed inset-0 z-[99999] bg-[#F9EFEE] flex-col items-center justify-center px-6 pt-10 pb-12 space-y-8 overflow-y-auto">
     <div class="text-center">
