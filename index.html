@@ -216,9 +216,9 @@
 
       if (event.data && event.data.type === 'ASK_PUSH') {
         OneSignalDeferred.push(function(OneSignal) {
-           // Espacio reservado para futuras acciones
-        });
-      }
+    OneSignal.Notifications.requestPermission().catch(e => console.log("Permiso denegado o no disponible"));
+  });
+}
 
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
