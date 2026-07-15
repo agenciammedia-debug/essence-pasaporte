@@ -35,7 +35,7 @@
         appId: "d75cd80b-3d2e-44c6-aa3d-1ba5350d62ea", 
         notifyButton: { enable: false },
         
-        // ESTO SOLUCIONA EL ERROR DE GITHUB PAGES (SUBCARPETAS)
+        // PILAR 2: ENRUTAMIENTO PARA GITHUB PAGES (SUBCARPETAS)
         serviceWorkerParam: { scope: "/essence-pasaporte/" },
         serviceWorkerPath: "/essence-pasaporte/sw.js"
       });
@@ -270,11 +270,14 @@
 
 
     function solicitarPermisoNativo() {
-      // Ocultamos el modal al instante para que no estorbe al aviso nativo
+      // Ocultamos el modal al instante
       document.getElementById('push-banner').style.display = 'none';
       
       OneSignalDeferred.push(function(OneSignal) {
-        // Al ejecutar esto directamente tras el clic, iOS no lo bloqueará
+        // Aseguramos la vinculación del ID antes de pedir el permiso
+        if (currentClientId) {
+          OneSignal.login(currentClientId);
+        }
         OneSignal.Notifications.requestPermission();
       });
     }
@@ -309,7 +312,7 @@
       if (html5QrcodeScanner) { html5QrcodeScanner.stop().catch(e => {}); }
     }
 
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(err => {}); }); }
+    
 
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
