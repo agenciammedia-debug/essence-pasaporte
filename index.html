@@ -221,13 +221,9 @@
 
       if (event.data && event.data.type === 'ASK_PUSH') {
         OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.Notifications.requestPermission().catch(e => console.log("Permiso denegado o no disponible"));
-  });
-}
-
-   
-
-
+          OneSignal.Notifications.requestPermission().catch(e => console.log("Permiso denegado o no disponible"));
+        });
+      }
       
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
@@ -273,7 +269,6 @@
                 if (pushBanner) {
                     pushBanner.classList.remove('hidden');
                 } else {
-                    // Si no existe, pedimos el permiso directamente al navegador
                     OneSignal.Notifications.requestPermission().then(function(permission) {
                         console.log("Permiso de notificaciones resuelto:", permission);
                     }).catch(function(error) {
@@ -284,7 +279,7 @@
           });
         }
       }
-    }); // <--- ESTAS SON LAS LLAVES QUE FALTABAN
+    });
 
     function solicitarPermisoNativo() {
       // Ocultamos el modal al instante
