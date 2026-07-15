@@ -32,8 +32,12 @@
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
-        appId: "d75cd80b-3d2e-44c6-aa3d-1ba5350d62ea", // Solo necesitas tu App ID
+        appId: "d75cd80b-3d2e-44c6-aa3d-1ba5350d62ea", 
         notifyButton: { enable: false },
+        
+        // ESTO SOLUCIONA EL ERROR DE GITHUB PAGES (SUBCARPETAS)
+        serviceWorkerParam: { scope: "/essence-pasaporte/" },
+        serviceWorkerPath: "/essence-pasaporte/sw.js"
       });
     });
   </script>
@@ -121,7 +125,7 @@
   </div>
 
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbx3HOL8QOMDO15O5Y8lJO0o7fiQ3MQvPiFNJqhMfnOJX9TpRFDKf6ivmWwHBFOOju0b/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwf7Sf08BTnvAHWWn_LwSnnPwfV6lJ8HAZcnI5xRTQkIdN_W5yBTCypWrp5IbDsrsw/exec";
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     
     let token = new URLSearchParams(window.location.search).get('token') || "";
