@@ -128,15 +128,23 @@
   </div>
 
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbx9tVLGXSr8DGCRuZ81EIMFR676GQt1CyV8BXlAzjqs4QR6kzIU4XcabxDgxxx_3opg/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwmGDY4G2w5zgMXa4TBcvaCO25uyrEKqT4SlxGFdAIiMnKGm46OXTv4QuYoR1mzc-MJ/exec";
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     
-    let token = new URLSearchParams(window.location.search).get('token') || "";
+    // --- SOLUCIÓN ARQUITECTÓNICA DE MEMORIA ---
+    // 1. Si venimos de un QR con token en la URL, lo guardamos de inmediato en la memoria del teléfono
+    let urlToken = new URLSearchParams(window.location.search).get('token') || "";
+    if (urlToken) {
+      localStorage.setItem('essence_pending_token', urlToken);
+    }
+    
+    // 2. El token real será el de la URL o el que dejamos guardado antes de instalar la App
+    let token = urlToken || localStorage.getItem('essence_pending_token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
     
+    // Leer caché local de la memoria
     let cachedName = localStorage.getItem('essence_local_nombre') || "";
     let cachedPoints = localStorage.getItem('essence_local_puntos') || 0;
-
     if (!isStandalone && !currentClientId) {
       document.getElementById('native-onboarding').classList.remove('hidden');
       document.getElementById('native-onboarding').classList.add('flex');
