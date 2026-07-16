@@ -28,8 +28,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-
-<!-- INTEGRACIÓN ONESIGNAL -->
+  <!-- INTEGRACIÓN ONESIGNAL -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -37,19 +36,14 @@
       await OneSignal.init({
         appId: "d75cd80b-3d2e-44c6-aa3d-1ba5350d62ea", 
         notifyButton: { enable: false },
-
         welcomeNotification: { disable: true },
-        
-        // PILAR 2: ENRUTAMIENTO PARA GITHUB PAGES (SUBCARPETAS)
+        // PILAR 2: ENRUTAMIENTO PARA GITHUB PAGES
         serviceWorkerParam: { scope: "/essence-pasaporte/" },
-        serviceWorkerPath: "/essence-pasaporte/service-worker.js" // <--- CAMBIO AQUÍ
+        serviceWorkerPath: "/essence-pasaporte/service-worker.js" 
       });
     });
   </script>
 
-
-
-  
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
@@ -64,6 +58,17 @@
   </style>
 </head>
 <body>
+
+  <!-- BANNER DE NOTIFICACIONES RECUPERADO -->
+  <div id="push-banner" class="hidden fixed top-4 left-4 right-4 z-[99999] glass rounded-2xl p-4 flex items-center justify-between shadow-lg border border-[#D9889A]">
+    <div class="flex-1">
+      <p class="text-sm font-bold text-[#8A7175]">Activar Notificaciones</p>
+      <p class="text-[10px] text-[#B59C9E] leading-tight mt-1">Para recibir tus regalos y avisos de sellos.</p>
+    </div>
+    <button onclick="solicitarPermisoNativo()" class="bg-[#D9889A] text-white text-xs font-bold px-5 py-2 rounded-full shadow-md active:scale-95 transition">
+      Activar
+    </button>
+  </div>
 
   <!-- PANTALLA DE BIENVENIDA NATIVA EN GITHUB -->
   <div id="native-onboarding" class="hidden fixed inset-0 z-[99999] bg-[#F9EFEE] flex-col items-center justify-center px-6 pt-10 pb-12 space-y-8 overflow-y-auto">
@@ -138,11 +143,9 @@
     let token = new URLSearchParams(window.location.search).get('token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
     
-    // Leer caché local de la memoria
     let cachedName = localStorage.getItem('essence_local_nombre') || "";
     let cachedPoints = localStorage.getItem('essence_local_puntos') || 0;
 
-    // CONTROL DE FLUJO INTELIGENTE DE 0 SEGUNDOS
     if (!isStandalone && !currentClientId) {
       document.getElementById('native-onboarding').classList.remove('hidden');
       document.getElementById('native-onboarding').classList.add('flex');
@@ -157,10 +160,10 @@
            const dash = document.getElementById('instant-dashboard');
            dash.classList.remove('hidden');
            dash.classList.add('flex');
-           dash.style.pointerEvents = 'auto'; // Permitir toques en el clon
+           dash.style.pointerEvents = 'auto'; 
         } else {
            loader.classList.remove('hidden');
-           loader.style.pointerEvents = 'auto'; // Bloquear toques accidentales en carga
+           loader.style.pointerEvents = 'auto'; 
         }
       } else {
         loader.classList.remove('hidden');
@@ -200,7 +203,7 @@
       iframe.onload = function() {
         const loader = document.getElementById('fast-loader');
         loader.style.opacity = '0';
-        loader.style.pointerEvents = 'none'; // <-- EXTREMADAMENTE CRUCIAL: Traspasar clics al formulario
+        loader.style.pointerEvents = 'none'; 
         setTimeout(() => loader.style.display = 'none', 400);
       };
       iframe.src = finalUrl;
@@ -208,94 +211,23 @@
 
     let html5QrcodeScanner = null;
 
+    // --- ESCUCHADOR DE MENSAJES (CORREGIDO) ---
     window.addEventListener('message', function(event) {
+      
       if (event.data && event.data.type === 'SAVE_ID') {
         currentClientId = event.data.id; 
         localStorage.setItem('essence_client_id', currentClientId);
         
         OneSignalDeferred.push(function(OneSignal) {
-          OneSignal.login(currentClientId); 
-          console.log("OneSignal logueado con ID: " + currentClientId);
+          OneSignal.login(currentClientId).then(() => {
+            console.log("OneSignal logueado con ID con éxito: " + currentClientId);
+            const iframe = document.getElementById('app-frame');
+            if (iframe && iframe.contentWindow) {
+              iframe.contentWindow.postMessage({ type: 'ONESIGNAL_READY' }, '*');
+            }
+          }).catch(err => console.log("Error en vinculación OneSignal: " + err));
         });
       }
-
-      if (event.data && event.data.type === 'ASK_PUSH') {
-        OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.Notifications.requestPermission().catch(e => console.log("Permiso denegado o no disponible"));
-  });
-}
-
-    // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
-    OneSignalDeferred.push(function(OneSignal) {
-      OneSignal.Notifications.addEventListener('click', function(event) {
-        const payloadData = event.notification.additionalData;
-        // Si la notificación trae el código de cumpleaños, abrimos la sorpresa
-        if (payloadData && payloadData.evento === "cumpleanos") {
-          abrirModalCumple();
-        }
-      });
-    });
-
-    // 2. FUNCIONES DE ANIMACIÓN Y UI
-    function abrirModalCumple() {
-      const modal = document.getElementById('birthday-modal');
-      const card = document.getElementById('birthday-card');
-      
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-      
-      // Delay de 50ms para permitir el renderizado antes de transicionar (efecto Apple suave)
-      setTimeout(() => {
-        modal.classList.remove('opacity-0');
-        card.classList.remove('scale-95');
-        card.classList.add('scale-100');
-        lanzarConfeti();
-      }, 50);
-    }
-
-    function cerrarModalCumple() {
-      const modal = document.getElementById('birthday-modal');
-      modal.classList.add('opacity-0');
-      setTimeout(() => {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-      }, 500);
-    }
-
-    function lanzarConfeti() {
-      var duration = 3 * 1000; // 3 segundos de lluvia de confeti
-      var animationEnd = Date.now() + duration;
-      // Colores de tu marca
-      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100000, colors: ['#D9889A', '#ffffff', '#8A7175', '#d9bbb1'] };
-
-      function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-
-      var interval = setInterval(function() {
-        var timeLeft = animationEnd - Date.now();
-        if (timeLeft <= 0) return clearInterval(interval);
-
-        var particleCount = 50 * (timeLeft / duration);
-        confetti(Object.assign({}, defaults, { particleCount,
-          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-        }));
-        confetti(Object.assign({}, defaults, { particleCount,
-          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-        }));
-      }, 250);
-    }
-
-    // DETECTOR DE REGALOS (A PRUEBA DE FALLOS)
-    (function comprobarRegaloCumple() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('evento') === 'cumpleanos') {
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setTimeout(() => {
-          abrirModalCumple();
-        }, 500);
-      }
-    })();
-
-
       
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
@@ -315,7 +247,6 @@
         localStorage.setItem('essence_local_puntos', event.data.puntos);
       }
       
-      // OCULTAR CARGADORES Y PERMITIR CLICS
       if (event.data && event.data.type === 'APP_READY') {
         const dash = document.getElementById('instant-dashboard');
         if (dash && !dash.classList.contains('hidden')) {
@@ -330,20 +261,17 @@
            setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 400);
         }
         
-        // Mantener logueada a la clienta sin lanzar avisos bloqueados
         if (currentClientId) {
           OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(currentClientId);
             
-            // Si aún no ha dado permiso (ni sí, ni no), verificamos si existe el banner
             if (OneSignal.Notifications.permission !== "granted" && OneSignal.Notifications.permission !== "denied") {
                 let pushBanner = document.getElementById('push-banner');
                 if (pushBanner) {
                     pushBanner.classList.remove('hidden');
                 } else {
-                    // Si no existe, pedimos el permiso directamente al navegador
                     OneSignal.Notifications.requestPermission().then(function(permission) {
-                        console.log("Permiso de notificaciones resuelto:", permission);
+                        console.log("Permiso resuelto:", permission);
                     }).catch(function(error) {
                         console.error("Error al pedir permisos Push:", error);
                     });
@@ -352,14 +280,22 @@
           });
         }
       }
-    }); // <--- ESTAS SON LAS LLAVES QUE FALTABAN
+    }); 
+    // --- FIN DEL ESCUCHADOR DE MENSAJES ---
+
+    // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
+    OneSignalDeferred.push(function(OneSignal) {
+      OneSignal.Notifications.addEventListener('click', function(event) {
+        const payloadData = event.notification.additionalData;
+        if (payloadData && payloadData.evento === "cumpleanos") {
+          abrirModalCumple();
+        }
+      });
+    });
 
     function solicitarPermisoNativo() {
-      // Ocultamos el modal al instante
       document.getElementById('push-banner').style.display = 'none';
-      
       OneSignalDeferred.push(function(OneSignal) {
-        // Aseguramos la vinculación del ID antes de pedir el permiso
         if (currentClientId) {
           OneSignal.login(currentClientId);
         }
@@ -381,7 +317,7 @@
             loader.classList.remove('hidden');
             loader.style.display = 'flex';
             loader.style.opacity = '1';
-            loader.style.pointerEvents = 'auto'; // Bloquea la pantalla durante la transacción
+            loader.style.pointerEvents = 'auto'; 
             loadIframe(scannedToken);
             cerrarEscanerNativo();
           } else { alert("El código QR no es válido."); }
@@ -396,8 +332,6 @@
       document.getElementById('scanner-modal').style.display = 'none';
       if (html5QrcodeScanner) { html5QrcodeScanner.stop().catch(e => {}); }
     }
-
-    
 
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -417,17 +351,57 @@
       }
     }
 
-    // DETECTOR DE REGALOS (A PRUEBA DE FALLOS)
+    // 2. FUNCIONES DE ANIMACIÓN Y UI CUMPLEAÑOS
+    function abrirModalCumple() {
+      const modal = document.getElementById('birthday-modal');
+      const card = document.getElementById('birthday-card');
+      
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        card.classList.remove('scale-95');
+        card.classList.add('scale-100');
+        lanzarConfeti();
+      }, 50);
+    }
+
+    function cerrarModalCumple() {
+      const modal = document.getElementById('birthday-modal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+      }, 500);
+    }
+
+    function lanzarConfeti() {
+      var duration = 3 * 1000; 
+      var animationEnd = Date.now() + duration;
+      var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100000, colors: ['#D9889A', '#ffffff', '#8A7175', '#d9bbb1'] };
+
+      function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+      var interval = setInterval(function() {
+        var timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+
+        var particleCount = 50 * (timeLeft / duration);
+        confetti(Object.assign({}, defaults, { particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        }));
+        confetti(Object.assign({}, defaults, { particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        }));
+      }, 250);
+    }
+
+    // DETECTOR DE REGALOS 
     (function comprobarRegaloCumple() {
       const urlParams = new URLSearchParams(window.location.search);
-      
-      // Si la URL tiene la llave maestra de cumpleaños
       if (urlParams.get('evento') === 'cumpleanos') {
-        
-        // Limpiamos la URL inmediatamente para que no vuelva a saltar si ella recarga la app
         window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Le damos medio segundo a la app para que cargue el diseño antes de lanzar el modal
         setTimeout(() => {
           abrirModalCumple();
         }, 500);
@@ -435,9 +409,6 @@
     })();
     
   </script>
-
-
-
 
   <div id="birthday-modal" class="hidden fixed inset-0 z-[99999] flex-col items-center justify-center p-6 transition-opacity duration-500 opacity-0" style="background: rgba(249, 239, 238, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
     <div class="glass w-full max-w-sm rounded-3xl p-8 border border-[#d9bbb1]/50 shadow-2xl text-center transform scale-95 transition-transform duration-500" id="birthday-card">
@@ -463,5 +434,3 @@
   
 </body>
 </html>
-
-
