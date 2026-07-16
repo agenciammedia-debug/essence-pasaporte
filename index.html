@@ -59,16 +59,7 @@
 </head>
 <body>
 
-  <!-- BANNER DE NOTIFICACIONES RECUPERADO -->
-  <div id="push-banner" class="hidden fixed top-4 left-4 right-4 z-[99999] glass rounded-2xl p-4 flex items-center justify-between shadow-lg border border-[#D9889A]">
-    <div class="flex-1">
-      <p class="text-sm font-bold text-[#8A7175]">Activar Notificaciones</p>
-      <p class="text-[10px] text-[#B59C9E] leading-tight mt-1">Para recibir tus regalos y avisos de sellos.</p>
-    </div>
-    <button onclick="solicitarPermisoNativo()" class="bg-[#D9889A] text-white text-xs font-bold px-5 py-2 rounded-full shadow-md active:scale-95 transition">
-      Activar
-    </button>
-  </div>
+ 
 
   <!-- PANTALLA DE BIENVENIDA NATIVA EN GITHUB -->
   <div id="native-onboarding" class="hidden fixed inset-0 z-[99999] bg-[#F9EFEE] flex-col items-center justify-center px-6 pt-10 pb-12 space-y-8 overflow-y-auto">
@@ -228,6 +219,13 @@
           }).catch(err => console.log("Error en vinculación OneSignal: " + err));
         });
       }
+
+      // ESTO LANZA EL POP-UP NATIVO DE APPLE INMEDIATAMENTE
+      if (event.data && event.data.type === 'ASK_PUSH') {
+        OneSignalDeferred.push(function(OneSignal) {
+          OneSignal.Notifications.requestPermission();
+        });
+      }
       
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
@@ -264,23 +262,11 @@
         if (currentClientId) {
           OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(currentClientId);
-            
-            if (OneSignal.Notifications.permission !== "granted" && OneSignal.Notifications.permission !== "denied") {
-                let pushBanner = document.getElementById('push-banner');
-                if (pushBanner) {
-                    pushBanner.classList.remove('hidden');
-                } else {
-                    OneSignal.Notifications.requestPermission().then(function(permission) {
-                        console.log("Permiso resuelto:", permission);
-                    }).catch(function(error) {
-                        console.error("Error al pedir permisos Push:", error);
-                    });
-                }
-            }
           });
         }
       }
     }); 
+    // --- FIN DEL ESCUCHADOR DE MENSAJES ---
     // --- FIN DEL ESCUCHADOR DE MENSAJES ---
 
     // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
