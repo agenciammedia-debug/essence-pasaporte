@@ -42,7 +42,7 @@
         
         // PILAR 2: ENRUTAMIENTO PARA GITHUB PAGES (SUBCARPETAS)
         serviceWorkerParam: { scope: "/essence-pasaporte/" },
-        serviceWorkerPath: "/essence-pasaporte/OneSignalSDKWorker.js" // <--- ASEGURA ESTA RUTA
+        serviceWorkerPath: "/essence-pasaporte/service-worker.js" // <--- CAMBIO AQUÍ
       });
     });
   </script>
@@ -132,7 +132,7 @@
   </div>
 
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbwmGDY4G2w5zgMXa4TBcvaCO25uyrEKqT4SlxGFdAIiMnKGm46OXTv4QuYoR1mzc-MJ/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbx9tVLGXSr8DGCRuZ81EIMFR676GQt1CyV8BXlAzjqs4QR6kzIU4XcabxDgxxx_3opg/exec";
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     
     let token = new URLSearchParams(window.location.search).get('token') || "";
@@ -220,18 +220,10 @@
       }
 
       if (event.data && event.data.type === 'ASK_PUSH') {
-        OneSignalDeferred.push(async function(OneSignal) {
-          // 1. Pedimos permiso a la usuaria y ESPERAMOS su respuesta
-          await OneSignal.Notifications.requestPermission();
-          
-          // 2. Verificamos si la usuaria tocó "Permitir"
-          if (OneSignal.Notifications.permission === "granted") {
-             console.log("Suscripción exitosa. Disparando Push de bienvenida...");
-             // 3. Enviamos la señal secreta a tu backend usando tu scriptUrl
-             fetch(scriptUrl + "?bienvenida=" + currentClientId, { mode: 'no-cors' });
-          }
-        });
-      }
+        OneSignalDeferred.push(function(OneSignal) {
+    OneSignal.Notifications.requestPermission().catch(e => console.log("Permiso denegado o no disponible"));
+  });
+}
 
     // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
     OneSignalDeferred.push(function(OneSignal) {
