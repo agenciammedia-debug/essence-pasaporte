@@ -131,14 +131,14 @@
     const scriptUrl = "https://script.google.com/macros/s/AKfycbwmGDY4G2w5zgMXa4TBcvaCO25uyrEKqT4SlxGFdAIiMnKGm46OXTv4QuYoR1mzc-MJ/exec";
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     
-    // --- SOLUCIÓN ARQUITECTÓNICA DE MEMORIA ---
-    // 1. Si venimos de un QR con token en la URL, lo guardamos de inmediato en la memoria del teléfono
+    // --- MEMORIA INDESTRUCTIBLE DE TOKEN PARA PWA ---
+    // 1. Si venimos de un QR con token, lo guardamos inmediatamente en el teléfono
     let urlToken = new URLSearchParams(window.location.search).get('token') || "";
     if (urlToken) {
       localStorage.setItem('essence_pending_token', urlToken);
     }
     
-    // 2. El token real será el de la URL o el que dejamos guardado antes de instalar la App
+    // 2. El token activo será el de la URL o el que dejamos guardado antes de instalar
     let token = urlToken || localStorage.getItem('essence_pending_token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
     
@@ -251,6 +251,9 @@
       if (event.data && event.data.type === 'CACHE_DASHBOARD') {
         localStorage.setItem('essence_local_nombre', event.data.nombre);
         localStorage.setItem('essence_local_puntos', event.data.puntos);
+        
+        // REGISTRO EXITOSO: Limpiamos el token de la memoria para que no se duplique en el futuro
+        localStorage.removeItem('essence_pending_token');
       }
       
       if (event.data && event.data.type === 'APP_READY') {
