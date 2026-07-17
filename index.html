@@ -526,6 +526,20 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
       </button>
     </div>
   </div>
+
+  <div id="push-banner" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 w-11/12 max-w-sm z-[99998] glass border border-[#D9889A]/40 rounded-2xl p-5 shadow-[0_10px_30px_rgba(217,136,154,0.2)]">
+  <div class="flex items-start gap-3">
+    <div class="h-10 w-10 flex-shrink-0 rounded-full bg-[#FFF5F7] border border-[#D9889A] flex items-center justify-center text-lg">🔔</div>
+    <div class="flex-1">
+      <p class="text-sm font-bold text-[#1A1A1A]">Activa tus notificaciones</p>
+      <p class="text-xs text-[#8A7175] mt-1 leading-relaxed">Así te avisamos cuando ganes un sello o un premio especial.</p>
+      <div class="flex gap-2 mt-3">
+        <button onclick="solicitarPermisoNativo()" class="flex-1 bg-[#D9889A] text-white text-xs font-bold py-2.5 rounded-full active:scale-95 transition">Activar</button>
+        <button onclick="document.getElementById('push-banner').classList.add('hidden')" class="px-4 text-xs text-[#8A7175] font-semibold">Ahora no</button>
+      </div>
+    </div>
+  </div>
+</div>
   
 </body>
 </html>
