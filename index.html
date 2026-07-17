@@ -282,7 +282,7 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
       debugLog('Parent: TIMEOUT - nunca se confirmo el push para id=' + pendingPushId);
       pendingPushId = null;
     }
-  }, 30000);
+}, 120000);
 }
 
       if (event.data && event.data.type === 'ASK_PUSH') {
