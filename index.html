@@ -137,6 +137,22 @@
     
     let token = new URLSearchParams(window.location.search).get('token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
+
+    // NUEVO: si venimos de escanear un QR pero la app aún no está instalada,
+// guardamos el token para no perderlo cuando se abra desde el ícono
+if (!isStandalone && token) {
+  localStorage.setItem('essence_pending_token', token);
+}
+
+// NUEVO: si se abre ya instalada desde el ícono y no trae token en la URL,
+// recuperamos el que quedó pendiente de cuando escaneó el QR
+if (isStandalone && !token) {
+  const pendingToken = localStorage.getItem('essence_pending_token');
+  if (pendingToken) {
+    token = pendingToken;
+    localStorage.removeItem('essence_pending_token');
+  }
+}
     
     // Leer caché local de la memoria
     let cachedName = localStorage.getItem('essence_local_nombre') || "";
