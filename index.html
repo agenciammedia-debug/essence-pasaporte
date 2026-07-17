@@ -142,6 +142,28 @@
     let cachedName = localStorage.getItem('essence_local_nombre') || "";
     let cachedPoints = localStorage.getItem('essence_local_puntos') || 0;
 
+    // NUEVO: control del primer sello (evita el push "fantasma" antes de tiempo)
+let pendingPushId = null;
+let pushSubscriptionReady = false;
+
+function intentarConfirmarPush() {
+  if (pushSubscriptionReady && pendingPushId) {
+    const iframe = document.getElementById('app-frame');
+    iframe.contentWindow.postMessage({ type: 'PUSH_LINK_CONFIRMED', id: pendingPushId }, '*');
+    pendingPushId = null;
+  }
+}
+
+OneSignalDeferred.push(function(OneSignal) {
+  OneSignal.User.PushSubscription.addEventListener('change', function(event) {
+    if (event.current && event.current.token && event.current.optedIn) {
+      pushSubscriptionReady = true;
+      // Margen de seguridad de 2s para que OneSignal sincronice el vínculo en su backend
+      setTimeout(intentarConfirmarPush, 2000);
+    }
+  });
+});
+
     // CONTROL DE FLUJO INTELIGENTE DE 0 SEGUNDOS
     if (!isStandalone && !currentClientId) {
       document.getElementById('native-onboarding').classList.remove('hidden');
@@ -218,6 +240,20 @@
           console.log("OneSignal logueado con ID: " + currentClientId);
         });
       }
+      // NUEVO: el iframe nos pide avisarle cuando el push de esta clienta quede vinculado
+if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
+  pendingPushId = event.data.id;
+  OneSignalDeferred.push(function(OneSignal) {
+    if (OneSignal.User.PushSubscription.optedIn && OneSignal.User.PushSubscription.token) {
+      pushSubscriptionReady = true;
+    }
+    intentarConfirmarPush();
+  });
+  // Si nunca da permiso, no dejamos la variable colgada para siempre
+  setTimeout(function() {
+    if (pendingPushId === event.data.id) pendingPushId = null;
+  }, 30000);
+}
 
       if (event.data && event.data.type === 'ASK_PUSH') {
         OneSignalDeferred.push(function(OneSignal) {
