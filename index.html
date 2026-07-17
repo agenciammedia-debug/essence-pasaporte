@@ -143,11 +143,21 @@
     let cachedPoints = localStorage.getItem('essence_local_puntos') || 0;
 
     // NUEVO: control del primer sello (evita el push "fantasma" antes de tiempo)
+// Control del primer sello (con registro de depuración)
 let pendingPushId = null;
 let pushSubscriptionReady = false;
 
+function debugLog(msg) {
+  console.log("[DEBUG]", msg);
+  const iframe = document.getElementById('app-frame');
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.postMessage({ type: 'DEBUG_LOG', msg: msg }, '*');
+  }
+}
+
 function intentarConfirmarPush() {
   if (pushSubscriptionReady && pendingPushId) {
+    debugLog('Parent: enviando PUSH_LINK_CONFIRMED para id=' + pendingPushId);
     const iframe = document.getElementById('app-frame');
     iframe.contentWindow.postMessage({ type: 'PUSH_LINK_CONFIRMED', id: pendingPushId }, '*');
     pendingPushId = null;
@@ -156,9 +166,10 @@ function intentarConfirmarPush() {
 
 OneSignalDeferred.push(function(OneSignal) {
   OneSignal.User.PushSubscription.addEventListener('change', function(event) {
-    if (event.current && event.current.token && event.current.optedIn) {
+    debugLog('Parent: subscription change - id=' + event.current.id + ' token=' + (event.current.token ? 'SI' : 'NO') + ' optedIn=' + event.current.optedIn);
+    // CAMBIO: ya no exigimos "token", solo optedIn (más confiable en Safari/iOS)
+    if (event.current && event.current.optedIn) {
       pushSubscriptionReady = true;
-      // Margen de seguridad de 2s para que OneSignal sincronice el vínculo en su backend
       setTimeout(intentarConfirmarPush, 2000);
     }
   });
@@ -243,15 +254,18 @@ OneSignalDeferred.push(function(OneSignal) {
       // NUEVO: el iframe nos pide avisarle cuando el push de esta clienta quede vinculado
 if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
   pendingPushId = event.data.id;
+  debugLog('Parent: WAIT_FOR_PUSH_LINK recibido para id=' + pendingPushId);
   OneSignalDeferred.push(function(OneSignal) {
-    if (OneSignal.User.PushSubscription.optedIn && OneSignal.User.PushSubscription.token) {
+    if (OneSignal.User.PushSubscription.optedIn) {
       pushSubscriptionReady = true;
     }
     intentarConfirmarPush();
   });
-  // Si nunca da permiso, no dejamos la variable colgada para siempre
   setTimeout(function() {
-    if (pendingPushId === event.data.id) pendingPushId = null;
+    if (pendingPushId === event.data.id) {
+      debugLog('Parent: TIMEOUT - nunca se confirmo el push para id=' + pendingPushId);
+      pendingPushId = null;
+    }
   }, 30000);
 }
 
