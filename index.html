@@ -255,6 +255,8 @@ OneSignalDeferred.push(function(OneSignal) {
       iframe.src = finalUrl;
     }
 
+    let cumpleModalYaMostrado = false;
+let html5QrcodeScanner = null;
     let html5QrcodeScanner = null;
 
     window.addEventListener('message', function(event) {
@@ -293,22 +295,25 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
 
     // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
     OneSignalDeferred.push(function(OneSignal) {
-      OneSignal.Notifications.addEventListener('click', function(event) {
-        const payloadData = event.notification.additionalData;
-        // Si la notificación trae el código de cumpleaños, abrimos la sorpresa
-        // if (payloadData && payloadData.evento === "cumpleanos") {
-         // abrirModalCumple();
-       // }
-      });
-    });
+  OneSignal.Notifications.addEventListener('click', function(event) {
+    const payloadData = event.notification.additionalData;
+    if (payloadData && payloadData.evento === "cumpleanos") {
+      abrirModalCumple();
+    }
+  });
+});
 
     // 2. FUNCIONES DE ANIMACIÓN Y UI
     function abrirModalCumple() {
-      const modal = document.getElementById('birthday-modal');
-      const card = document.getElementById('birthday-card');
-      
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+  if (cumpleModalYaMostrado) return; // Ya se mostró, evitamos que se vuelva a abrir
+  cumpleModalYaMostrado = true;
+
+  const modal = document.getElementById('birthday-modal');
+  const card = document.getElementById('birthday-card');
+  
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  
       
       // Delay de 50ms para permitir el renderizado antes de transicionar (efecto Apple suave)
       setTimeout(() => {
