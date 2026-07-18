@@ -100,16 +100,18 @@
     </div>
     
     <div class="glass w-full rounded-3xl p-6 border border-[#d9bbb1]/50 shadow-lg relative overflow-hidden">
-      <div class="flex justify-between items-end mb-6">
-        <h3 class="text-[#8A7175] text-sm font-bold uppercase tracking-widest">Tus Sellos</h3>
-        <p class="text-3xl font-bold text-[#D9889A] leading-none"><span id="instant-points"></span><span class="text-lg text-[#B59C9E] font-medium">/10</span></p>
+      <div id="instant-content-blur" style="filter: blur(3px); opacity: 0.65;">
+        <div class="flex justify-between items-end mb-6">
+          <h3 class="text-[#8A7175] text-sm font-bold uppercase tracking-widest">Tus Sellos</h3>
+          <p class="text-3xl font-bold text-[#D9889A] leading-none"><span id="instant-points"></span><span class="text-lg text-[#B59C9E] font-medium">/10</span></p>
+        </div>
+        
+        <div id="instant-grid" class="grid grid-cols-5 gap-3 mb-4"></div>
       </div>
-      
-      <div id="instant-grid" class="grid grid-cols-5 gap-3 mb-4"></div>
-      
-      <div class="flex flex-col justify-center items-center mt-6 opacity-60">
-         <div class="spinner" style="width:20px; height:20px; border-width:2px;"></div>
-         <p class="text-[10px] text-[#B59C9E] mt-2 uppercase tracking-widest">Sincronizando con Essence...</p>
+
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+         <div class="spinner" style="width:32px; height:32px; border-width:3px;"></div>
+         <p class="text-[10px] text-[#B59C9E] mt-3 uppercase tracking-widest font-bold">Sincronizando con Essence...</p>
       </div>
     </div>
   </div>
