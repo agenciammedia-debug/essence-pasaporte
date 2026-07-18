@@ -296,6 +296,7 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
     OneSignalDeferred.push(function(OneSignal) {
   OneSignal.Notifications.addEventListener('click', function(event) {
     const payloadData = event.notification.additionalData;
+    alert("✅ CLIC EN PUSH DETECTADO. Data: " + JSON.stringify(payloadData)); // TEMPORAL
     if (payloadData && payloadData.evento === "cumpleanos") {
       abrirModalCumple();
     }
@@ -306,6 +307,9 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
     function abrirModalCumple() {
   if (cumpleModalYaMostrado) return; // Ya se mostró, evitamos que se vuelva a abrir
   cumpleModalYaMostrado = true;
+
+        alert("✅ SE LLAMÓ A abrirModalCumple"); // TEMPORAL
+
 
   const modal = document.getElementById('birthday-modal');
   const card = document.getElementById('birthday-card');
@@ -358,6 +362,8 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
     (function comprobarRegaloCumple() {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('evento') === 'cumpleanos') {
+        alert("✅ LA URL SÍ TRAE ?evento=cumpleanos"); // TEMPORAL
+
     window.history.replaceState({}, document.title, window.location.pathname);
     setTimeout(() => {
       abrirModalCumple();
