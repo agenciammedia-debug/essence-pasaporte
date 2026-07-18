@@ -352,14 +352,14 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
 
     // DETECTOR DE REGALOS (A PRUEBA DE FALLOS)
     (function comprobarRegaloCumple() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('evento') === 'cumpleanos') {
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setTimeout(() => {
-          abrirModalCumple();
-        }, 500);
-      }
-    })();
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('evento') === 'cumpleanos') {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    setTimeout(() => {
+      abrirModalCumple();
+    }, 500);
+  }
+})();
 
 
       
