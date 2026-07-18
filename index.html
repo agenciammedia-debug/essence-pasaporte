@@ -138,60 +138,51 @@
     let token = new URLSearchParams(window.location.search).get('token') || "";
     let currentClientId = localStorage.getItem('essence_client_id') || "";
 
-    // NUEVO: si venimos de escanear un QR pero la app aún no está instalada,
-// guardamos el token para no perderlo cuando se abra desde el ícono
-if (!isStandalone && token) {
-  localStorage.setItem('essence_pending_token', token);
-}
+    if (!isStandalone && token) {
+      localStorage.setItem('essence_pending_token', token);
+    }
 
-// NUEVO: si se abre ya instalada desde el ícono y no trae token en la URL,
-// recuperamos el que quedó pendiente de cuando escaneó el QR
-if (isStandalone && !token) {
-  const pendingToken = localStorage.getItem('essence_pending_token');
-  if (pendingToken) {
-    token = pendingToken;
-    localStorage.removeItem('essence_pending_token');
-  }
-}
+    if (isStandalone && !token) {
+      const pendingToken = localStorage.getItem('essence_pending_token');
+      if (pendingToken) {
+        token = pendingToken;
+        localStorage.removeItem('essence_pending_token');
+      }
+    }
     
-    // Leer caché local de la memoria
     let cachedName = localStorage.getItem('essence_local_nombre') || "";
     let cachedPoints = localStorage.getItem('essence_local_puntos') || 0;
 
-    // NUEVO: control del primer sello (evita el push "fantasma" antes de tiempo)
-// Control del primer sello (con registro de depuración)
-let pendingPushId = null;
-let pushSubscriptionReady = false;
+    let pendingPushId = null;
+    let pushSubscriptionReady = false;
 
-function debugLog(msg) {
-  console.log("[DEBUG]", msg);
-  const iframe = document.getElementById('app-frame');
-  if (iframe && iframe.contentWindow) {
-    iframe.contentWindow.postMessage({ type: 'DEBUG_LOG', msg: msg }, '*');
-  }
-}
-
-function intentarConfirmarPush() {
-  if (pushSubscriptionReady && pendingPushId) {
-    debugLog('Parent: enviando PUSH_LINK_CONFIRMED para id=' + pendingPushId);
-    const iframe = document.getElementById('app-frame');
-    iframe.contentWindow.postMessage({ type: 'PUSH_LINK_CONFIRMED', id: pendingPushId }, '*');
-    pendingPushId = null;
-  }
-}
-
-OneSignalDeferred.push(function(OneSignal) {
-  OneSignal.User.PushSubscription.addEventListener('change', function(event) {
-    debugLog('Parent: subscription change - id=' + event.current.id + ' token=' + (event.current.token ? 'SI' : 'NO') + ' optedIn=' + event.current.optedIn);
-    // CAMBIO: ya no exigimos "token", solo optedIn (más confiable en Safari/iOS)
-    if (event.current && event.current.optedIn) {
-      pushSubscriptionReady = true;
-      setTimeout(intentarConfirmarPush, 2000);
+    function debugLog(msg) {
+      console.log("[DEBUG]", msg);
+      const iframe = document.getElementById('app-frame');
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'DEBUG_LOG', msg: msg }, '*');
+      }
     }
-  });
-});
 
-    // CONTROL DE FLUJO INTELIGENTE DE 0 SEGUNDOS
+    function intentarConfirmarPush() {
+      if (pushSubscriptionReady && pendingPushId) {
+        debugLog('Parent: enviando PUSH_LINK_CONFIRMED para id=' + pendingPushId);
+        const iframe = document.getElementById('app-frame');
+        iframe.contentWindow.postMessage({ type: 'PUSH_LINK_CONFIRMED', id: pendingPushId }, '*');
+        pendingPushId = null;
+      }
+    }
+
+    OneSignalDeferred.push(function(OneSignal) {
+      OneSignal.User.PushSubscription.addEventListener('change', function(event) {
+        debugLog('Parent: subscription change - id=' + event.current.id + ' token=' + (event.current.token ? 'SI' : 'NO') + ' optedIn=' + event.current.optedIn);
+        if (event.current && event.current.optedIn) {
+          pushSubscriptionReady = true;
+          setTimeout(intentarConfirmarPush, 2000);
+        }
+      });
+    });
+
     if (!isStandalone && !currentClientId) {
       document.getElementById('native-onboarding').classList.remove('hidden');
       document.getElementById('native-onboarding').classList.add('flex');
@@ -206,10 +197,10 @@ OneSignalDeferred.push(function(OneSignal) {
            const dash = document.getElementById('instant-dashboard');
            dash.classList.remove('hidden');
            dash.classList.add('flex');
-           dash.style.pointerEvents = 'auto'; // Permitir toques en el clon
+           dash.style.pointerEvents = 'auto';
         } else {
            loader.classList.remove('hidden');
-           loader.style.pointerEvents = 'auto'; // Bloquear toques accidentales en carga
+           loader.style.pointerEvents = 'auto';
         }
       } else {
         loader.classList.remove('hidden');
@@ -249,76 +240,36 @@ OneSignalDeferred.push(function(OneSignal) {
       iframe.onload = function() {
         const loader = document.getElementById('fast-loader');
         loader.style.opacity = '0';
-        loader.style.pointerEvents = 'none'; // <-- EXTREMADAMENTE CRUCIAL: Traspasar clics al formulario
+        loader.style.pointerEvents = 'none';
         setTimeout(() => loader.style.display = 'none', 400);
       };
       iframe.src = finalUrl;
     }
 
     let cumpleModalYaMostrado = false;
-let html5QrcodeScanner = null;
+    let html5QrcodeScanner = null;
 
-    window.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'SAVE_ID') {
-        currentClientId = event.data.id; 
-        localStorage.setItem('essence_client_id', currentClientId);
-        
-        OneSignalDeferred.push(function(OneSignal) {
-          OneSignal.login(currentClientId); 
-          console.log("OneSignal logueado con ID: " + currentClientId);
-        });
-      }
-      // NUEVO: el iframe nos pide avisarle cuando el push de esta clienta quede vinculado
-if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
-  pendingPushId = event.data.id;
-  debugLog('Parent: WAIT_FOR_PUSH_LINK recibido para id=' + pendingPushId);
-  OneSignalDeferred.push(function(OneSignal) {
-    if (OneSignal.User.PushSubscription.optedIn) {
-      pushSubscriptionReady = true;
-    }
-    intentarConfirmarPush();
-  });
-  setTimeout(function() {
-    if (pendingPushId === event.data.id) {
-      debugLog('Parent: TIMEOUT - nunca se confirmo el push para id=' + pendingPushId);
-      pendingPushId = null;
-    }
-}, 120000);
-}
-
-      if (event.data && event.data.type === 'ASK_PUSH') {
-        OneSignalDeferred.push(function(OneSignal) {
-    OneSignal.Notifications.requestPermission().catch(e => console.log("Permiso denegado o no disponible"));
-  });
-}
-
-    // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN
+    // 1. ESCUCHAR EL CLIC EN LA NOTIFICACIÓN (a nivel general, ya no atrapado)
     OneSignalDeferred.push(function(OneSignal) {
-  OneSignal.Notifications.addEventListener('click', function(event) {
-    const payloadData = event.notification.additionalData;
-    alert("✅ CLIC EN PUSH DETECTADO. Data: " + JSON.stringify(payloadData)); // TEMPORAL
-    if (payloadData && payloadData.evento === "cumpleanos") {
-      abrirModalCumple();
-    }
-  });
-});
+      OneSignal.Notifications.addEventListener('click', function(event) {
+        const payloadData = event.notification.additionalData;
+        if (payloadData && payloadData.evento === "cumpleanos") {
+          abrirModalCumple();
+        }
+      });
+    });
 
-    // 2. FUNCIONES DE ANIMACIÓN Y UI
+    // 2. FUNCIONES DE ANIMACIÓN Y UI (a nivel general, ya no atrapadas)
     function abrirModalCumple() {
-  if (cumpleModalYaMostrado) return; // Ya se mostró, evitamos que se vuelva a abrir
-  cumpleModalYaMostrado = true;
+      if (cumpleModalYaMostrado) return;
+      cumpleModalYaMostrado = true;
 
-        alert("✅ SE LLAMÓ A abrirModalCumple"); // TEMPORAL
-
-
-  const modal = document.getElementById('birthday-modal');
-  const card = document.getElementById('birthday-card');
-  
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
-  
+      const modal = document.getElementById('birthday-modal');
+      const card = document.getElementById('birthday-card');
       
-      // Delay de 50ms para permitir el renderizado antes de transicionar (efecto Apple suave)
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
       setTimeout(() => {
         modal.classList.remove('opacity-0');
         card.classList.remove('scale-95');
@@ -337,9 +288,8 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
     }
 
     function lanzarConfeti() {
-      var duration = 3 * 1000; // 3 segundos de lluvia de confeti
+      var duration = 3 * 1000;
       var animationEnd = Date.now() + duration;
-      // Colores de tu marca
       var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100000, colors: ['#D9889A', '#ffffff', '#8A7175', '#d9bbb1'] };
 
       function randomInRange(min, max) { return Math.random() * (max - min) + min; }
@@ -358,20 +308,50 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
       }, 250);
     }
 
-    // DETECTOR DE REGALOS (A PRUEBA DE FALLOS)
+    // DETECTOR DE REGALOS (A PRUEBA DE FALLOS) - a nivel general, se ejecuta al cargar la página
     (function comprobarRegaloCumple() {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('evento') === 'cumpleanos') {
-        alert("✅ LA URL SÍ TRAE ?evento=cumpleanos"); // TEMPORAL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('evento') === 'cumpleanos') {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setTimeout(() => {
+          abrirModalCumple();
+        }, 500);
+      }
+    })();
 
-    window.history.replaceState({}, document.title, window.location.pathname);
-    setTimeout(() => {
-      abrirModalCumple();
-    }, 500);
-  }
-})();
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'SAVE_ID') {
+        currentClientId = event.data.id; 
+        localStorage.setItem('essence_client_id', currentClientId);
+        
+        OneSignalDeferred.push(function(OneSignal) {
+          OneSignal.login(currentClientId); 
+          console.log("OneSignal logueado con ID: " + currentClientId);
+        });
+      }
 
+      if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
+        pendingPushId = event.data.id;
+        debugLog('Parent: WAIT_FOR_PUSH_LINK recibido para id=' + pendingPushId);
+        OneSignalDeferred.push(function(OneSignal) {
+          if (OneSignal.User.PushSubscription.optedIn) {
+            pushSubscriptionReady = true;
+          }
+          intentarConfirmarPush();
+        });
+        setTimeout(function() {
+          if (pendingPushId === event.data.id) {
+            debugLog('Parent: TIMEOUT - nunca se confirmo el push para id=' + pendingPushId);
+            pendingPushId = null;
+          }
+        }, 120000);
+      }
 
+      if (event.data && event.data.type === 'ASK_PUSH') {
+        OneSignalDeferred.push(function(OneSignal) {
+          OneSignal.Notifications.requestPermission().catch(e => console.log("Permiso denegado o no disponible"));
+        });
+      }
       
       if (event.data && event.data.type === 'OPEN_SCANNER') {
         abrirEscanerNativo();
@@ -395,7 +375,6 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
         localStorage.setItem('essence_local_puntos', event.data.puntos);
       }
       
-      // OCULTAR CARGADORES Y PERMITIR CLICS
       if (event.data && event.data.type === 'APP_READY') {
         const dash = document.getElementById('instant-dashboard');
         if (dash && !dash.classList.contains('hidden')) {
@@ -410,18 +389,15 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
            setTimeout(() => { loader.classList.add('hidden'); loader.style.display = 'none'; }, 400);
         }
         
-        // Mantener logueada a la clienta sin lanzar avisos bloqueados
         if (currentClientId) {
           OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(currentClientId);
             
-            // Si aún no ha dado permiso (ni sí, ni no), verificamos si existe el banner
             if (OneSignal.Notifications.permission !== "granted" && OneSignal.Notifications.permission !== "denied") {
                 let pushBanner = document.getElementById('push-banner');
                 if (pushBanner) {
                     pushBanner.classList.remove('hidden');
                 } else {
-                    // Si no existe, pedimos el permiso directamente al navegador
                     OneSignal.Notifications.requestPermission().then(function(permission) {
                         console.log("Permiso de notificaciones resuelto:", permission);
                     }).catch(function(error) {
@@ -432,14 +408,12 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
           });
         }
       }
-    }); // <--- ESTAS SON LAS LLAVES QUE FALTABAN
+    });
 
     function solicitarPermisoNativo() {
-      // Ocultamos el modal al instante
       document.getElementById('push-banner').style.display = 'none';
       
       OneSignalDeferred.push(function(OneSignal) {
-        // Aseguramos la vinculación del ID antes de pedir el permiso
         if (currentClientId) {
           OneSignal.login(currentClientId);
         }
@@ -461,7 +435,7 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
             loader.classList.remove('hidden');
             loader.style.display = 'flex';
             loader.style.opacity = '1';
-            loader.style.pointerEvents = 'auto'; // Bloquea la pantalla durante la transacción
+            loader.style.pointerEvents = 'auto';
             loadIframe(scannedToken);
             cerrarEscanerNativo();
           } else { alert("El código QR no es válido."); }
@@ -476,8 +450,6 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
       document.getElementById('scanner-modal').style.display = 'none';
       if (html5QrcodeScanner) { html5QrcodeScanner.stop().catch(e => {}); }
     }
-
-    
 
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -496,23 +468,6 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
         alert("✨ Para instalar tu Pasaporte:\n\n1. Asegúrate de estar en el navegador Google Chrome.\n2. Toca los 3 puntos (⋮) arriba a la derecha.\n3. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla principal'.");
       }
     }
-
-    // DETECTOR DE REGALOS (A PRUEBA DE FALLOS)
-    (function comprobarRegaloCumple() {
-      const urlParams = new URLSearchParams(window.location.search);
-      
-      // Si la URL tiene la llave maestra de cumpleaños
-      if (urlParams.get('evento') === 'cumpleanos') {
-        
-        // Limpiamos la URL inmediatamente para que no vuelva a saltar si ella recarga la app
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Le damos medio segundo a la app para que cargue el diseño antes de lanzar el modal
-        setTimeout(() => {
-          abrirModalCumple();
-        }, 500);
-      }
-    })();
     
   </script>
 
