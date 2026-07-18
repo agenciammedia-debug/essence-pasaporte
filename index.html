@@ -296,9 +296,9 @@ if (event.data && event.data.type === 'WAIT_FOR_PUSH_LINK') {
       OneSignal.Notifications.addEventListener('click', function(event) {
         const payloadData = event.notification.additionalData;
         // Si la notificación trae el código de cumpleaños, abrimos la sorpresa
-        if (payloadData && payloadData.evento === "cumpleanos") {
-          abrirModalCumple();
-        }
+        // if (payloadData && payloadData.evento === "cumpleanos") {
+         // abrirModalCumple();
+       // }
       });
     });
 
