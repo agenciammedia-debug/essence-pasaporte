@@ -516,7 +516,11 @@ function iniciarLectorQR() {
   <div id="sedes-modal" class="hidden fixed inset-0 z-[99999] items-center justify-center p-6" style="background: rgba(249, 239, 238, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);" onclick="if (event.target === this) cerrarModalSedes()">
     <div class="glass w-full max-w-sm rounded-3xl p-8 border border-[#d9bbb1]/50 shadow-2xl text-center">
       <h2 class="text-xl font-bold text-[#8A7175] mb-2">¿Qué sede visitaste?</h2>
-      <p class="text-sm text-[#B59C9E] mb-6">Elige tu sede y cuéntanos cómo te fue. Si puedes, añade una foto de tu resultado. ¡Nos ayuda muchísimo! 💕</p>
+      <p class="text-sm text-[#B59C9E] mb-6 leading-relaxed">
+        <span class="font-bold text-[#8A7175]">Cuéntanos cómo te sentiste.</span><br>
+        Y si puedes, añade una fotito.<br>
+        ¡Nos ayuda muchísimo! 💕
+      </p>
       <button onclick="irAResena('miraflores')" class="w-full bg-[#D9889A] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition mb-3">Miraflores</button>
             <button onclick="irAResena('surco')" class="w-full bg-[#E1A0AE] text-white py-4 rounded-full font-bold shadow-md active:scale-95 transition">Surco</button>
       <button onclick="cerrarModalSedes()" class="mt-5 text-xs text-[#B59C9E] uppercase tracking-widest font-bold">Cancelar</button>
